@@ -31,16 +31,22 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         flattened_arr = [item for sublist in result_arr for item in sublist]
         return flattened_arr
 
-    def find_word_synonyms(self, word, filters):
+    def find_word_synonyms(self, word, filters, designation=False):
         model = self.get_model()
+        field=''
         word = word.lower() if isinstance(word, str) else None
 
         if word:
-            filters.append(func.lower(model.synonyms_text).like(word))
+            filters.append(func.lower(model.synonyms_text).like('%' + word + '%'))
+
+        if designation:
+            field = model.stems_text
+        else:
+            field = model.synonyms_text
 
         criteria = SynonymQueryCriteria(
             word=word,
-            fields=[model.synonyms_text],
+            fields=[field],
             filters=filters
         )
 
@@ -112,7 +118,7 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
 
         filters.append(func.lower(model.category).op('~')(r'\y{}\y'.format(lang.lower())))
 
-        results = self.find_word_synonyms(None, filters)
+        results = self.find_word_synonyms(None, filters, True)
         flattened = self._flatten_synonyms_text(results)
         return flattened
 
