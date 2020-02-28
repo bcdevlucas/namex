@@ -1,6 +1,7 @@
 # TODO: Name pre-processing has been moved to its own service
 import collections
 import warnings
+from collections import defaultdict
 
 import pandas as pd
 
@@ -176,19 +177,19 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetWordClassificationListsMixi
             # Get the word classification for each word in the supplied name name
             for word in self._list_name_words:
                 word_classification = wc_svc.find_one(word)
-                new_row = {}
+                new_row = []
                 if not word_classification:
                     print('No word classification found for: ' + word)
-                    new_row = {
+                    new_row.append({
                         'word': word.lower().strip(),
                         'word_classification': DataFrameFields.UNCLASSIFIED.value
-                    }
+                    })
                 else:
                     for row in word_classification:
-                        new_row = {
+                        new_row.append({
                             'word': word.lower().strip(),
                             'word_classification': row.classification.strip()
-                        }
+                        })
 
                 cf = cf.append(new_row, ignore_index=True)
 
@@ -322,6 +323,7 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetWordClassificationListsMixi
     '''
     @:param name <string> the original name
     '''
+
     def set_designations_by_input_name(self, name):
         syn_svc = self.get_synonym_service()
 
