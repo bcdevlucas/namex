@@ -24,20 +24,20 @@ class Config(object):
     SOLR_SYNONYMS_API_URL = os.getenv('SOLR_SYNONYMS_API_URL', None)
     NRO_EXTRACTOR_URI = os.getenv('NRO_EXTRACTOR_URI', None)
 
-    ALEMBIC_INI='migrations/alembic.ini'
+    ALEMBIC_INI = 'migrations/alembic.ini'
 
     # POSTGRESQL
     DB_USER = os.getenv('DATABASE_USERNAME', '')
-    DB_PASSWORD = os.getenv('DATABASE_PASSWORD','')
-    DB_NAME = os.getenv('DATABASE_NAME','')
-    DB_HOST = os.getenv('DATABASE_HOST','')
-    DB_PORT = os.getenv('DATABASE_PORT','5432')
+    DB_PASSWORD = os.getenv('DATABASE_PASSWORD', '')
+    DB_NAME = os.getenv('DATABASE_NAME', '')
+    DB_HOST = os.getenv('DATABASE_HOST', '')
+    DB_PORT = os.getenv('DATABASE_PORT', '5432')
     SQLALCHEMY_DATABASE_URI = 'postgresql://{user}:{password}@{host}:{port}/{name}'.format(
-         user=DB_USER,
-         password=DB_PASSWORD,
-         host=DB_HOST,
-         port=int(DB_PORT),
-         name=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        host=DB_HOST,
+        port=int(DB_PORT),
+        name=DB_NAME,
     )
     ## ORACLE - LEGACY NRO NAMESDB
     NRO_USER = os.getenv('NRO_USER', '')
@@ -60,7 +60,6 @@ class Config(object):
     except:
         JWT_OIDC_JWKS_CACHE_TIMEOUT = 300
 
-
     TESTING = False,
     DEBUG = False
 
@@ -75,16 +74,16 @@ class TestConfig(Config):
     TESTING = True
     # POSTGRESQL
     DB_USER = os.getenv('DATABASE_TEST_USERNAME', '')
-    DB_PASSWORD = os.getenv('DATABASE_TEST_PASSWORD','')
-    DB_NAME = os.getenv('DATABASE_TEST_NAME','')
-    DB_HOST = os.getenv('DATABASE_TEST_HOST','')
-    DB_PORT = os.getenv('DATABASE_TEST_PORT','5432')
+    DB_PASSWORD = os.getenv('DATABASE_TEST_PASSWORD', '')
+    DB_NAME = os.getenv('DATABASE_TEST_NAME', '')
+    DB_HOST = os.getenv('DATABASE_TEST_HOST', '')
+    DB_PORT = os.getenv('DATABASE_TEST_PORT', '5432')
     SQLALCHEMY_DATABASE_URI = 'postgresql://{user}:{password}@{host}:{port}/{name}'.format(
-         user=DB_USER,
-         password=DB_PASSWORD,
-         host=DB_HOST,
-         port=int(DB_PORT),
-         name=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        host=DB_HOST,
+        port=int(DB_PORT),
+        name=DB_NAME,
     )
 
     # JWT OIDC settings
@@ -142,4 +141,3 @@ class TestConfig(Config):
     NrQw+2OdQACBJiEHsdZzAkBcsTk7frTH4yGx0VfHxXDPjfTj4wmD6gZIlcIr9lZg
     4H8UZcVFN95vEKxJiLRjAmj6g273pu9kK4ymXNEjWWJn
     -----END RSA PRIVATE KEY-----"""
-
