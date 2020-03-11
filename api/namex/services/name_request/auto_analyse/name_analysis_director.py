@@ -109,12 +109,21 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
         np_svc = self.name_processing_service
         return self.name_processing_service.name_as_submitted if np_svc else ''
 
+    @property
+    def name_as_submitted_tokenized(self):
+        np_svc = self.name_processing_service
+        return self.name_processing_service.name_as_submitted_tokenized if np_svc else ''
+
     '''
     Just an alias for name_as_submitted
     '''
     @property
     def original_name(self):
         return self.name_as_submitted
+
+    @property
+    def original_name_tokenized(self):
+        return self.name_as_submitted_tokenized
 
     def __init__(self):
         self.synonym_service = SynonymService()
@@ -156,6 +165,9 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
     def get_processed_name(self):
         return self.processed_name
 
+    def get_original_name_tokenized(self):
+        return self.original_name_tokenized
+
     '''
     Set and preprocess a submitted name string.
     Setting the name using np_svc.set_name will clean the name and set the following properties:
@@ -168,6 +180,7 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
         wc_svc = self.word_classification_service
 
         np_svc.set_name(name)
+        np_svc.set_name_tokenized(name)
 
         # TODO: Get rid of this when done refactoring!
         self._list_name_words = np_svc.name_tokens
@@ -204,7 +217,7 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
             list_name = self.name_tokens
             list_dist, list_desc, list_none = self.word_classification_tokens
 
-            results = []
+            analysis = []
             if list_none and list_none.__len__() > 0:
                 self._list_dist_words, self._list_desc_words = TokenClassifier.handle_unclassified_words(
                     list_dist,
@@ -213,6 +226,11 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
                     list_name
                 )
 
+            check_words_to_avoid = builder.check_words_to_avoid(list_name, self.processed_name)
+            if not check_words_to_avoid.is_valid:
+                analysis.append(check_words_to_avoid)
+                return analysis
+
             check_name_is_well_formed = builder.check_name_is_well_formed(
                 self.token_classifier.distinctive_word_tokens,
                 self.token_classifier.descriptive_word_tokens,
@@ -220,20 +238,23 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
                 self.name_tokens
             )
 
-            results = results + check_name_is_well_formed
+            analysis = analysis + check_name_is_well_formed
+
             # If the error coming back is that a name is not well formed
+            # OR if the error coming back has words to avoid...
             # eg. result.result_code = AnalysisResultCodes.CONTAINS_UNCLASSIFIABLE_WORD
             # don't return the result yet, the name is well formed, we just have an unclassified
             # word in the result.
 
             issues_that_must_be_fixed = [
+                AnalysisResultCodes.WORDS_TO_AVOID,
                 AnalysisResultCodes.ADD_DISTINCTIVE_WORD,
                 AnalysisResultCodes.ADD_DESCRIPTIVE_WORD,
                 AnalysisResultCodes.TOO_MANY_WORDS
             ]
 
             issue_must_be_fixed = False
-            result_codes = list(map(lambda r: r.result_code, results))
+            result_codes = list(map(lambda r: r.result_code, analysis))
 
             for code in result_codes:
                 if code in issues_that_must_be_fixed:
@@ -241,15 +262,45 @@ class NameAnalysisDirector(GetSynonymsListsMixin, GetDesignationsListsMixin, Get
                     break
 
             if issue_must_be_fixed:
-                return results
+                return analysis
 
                 #  Name is not well formed - do not continue
 
-            analysis = results + self.do_analysis()
+            analysis = analysis + self.do_analysis()
 
-            if not analysis:
-                # TODO: Get the classname of the concrete class, somehow, for the message...
-                raise ValueError('NameAnalysisDirector.execute_analysis did not return a result')
+            # if not analysis:
+            #    raise ValueError('NameAnalysisDirector.execute_analysis did not return a result')
+
+            # If the WORD_TO_AVOID check failed, the UNCLASSIFIED_WORD check
+            # will have failed too because words to avoid are never classified.
+            # Strip out the unclassified words errors involving the same name words.
+            list_avoid = []
+
+            match_words_to_avoid = list(filter(lambda i: i.result_code == AnalysisResultCodes.WORDS_TO_AVOID, analysis))
+            if match_words_to_avoid.__len__() > 0:
+                for procedure_result in match_words_to_avoid:
+                    list_avoid = list_avoid + procedure_result.values.get('list_avoid', [])
+
+                def remove_words_to_avoid(result):
+                    if result.result_code == AnalysisResultCodes.CONTAINS_UNCLASSIFIABLE_WORD:
+                        for word in list_avoid:
+                            result.values['list_none'].remove(word)
+                    return result
+
+                analysis = list(map(remove_words_to_avoid, analysis))
+
+                # Serve the unclassified word issues last
+                uc_word_issue_indexes = []
+                uc_word_issues = []
+                for idx, issue in enumerate(analysis):
+                    if issue.result_code == AnalysisResultCodes.CONTAINS_UNCLASSIFIABLE_WORD:
+                        uc_word_issue_indexes.append(idx)
+
+                for idx in uc_word_issue_indexes:
+                    issue = analysis.pop(idx)
+                    uc_word_issues.append(issue)
+
+                analysis = analysis + uc_word_issues
 
             return analysis
 

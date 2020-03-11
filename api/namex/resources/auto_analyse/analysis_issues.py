@@ -21,7 +21,8 @@ class AnalysisResponseIssue:
     '''
     @:param setup_config Setup[]
     '''
-    def __init__(self, setup_config):
+    def __init__(self, entity_type, setup_config):
+        self.entity_type = entity_type
         self.setup_config = []
         self.set_issue_setups(setup_config)
 
@@ -176,7 +177,7 @@ class AddDistinctiveWordIssue(AnalysisResponseIssue):
                 type=NameActions.BRACKETS,
                 position=WordPositions.START,
                 message="Add a Word Here",
-                word=values[0],
+                word=values[0] if values.__len__() > 0 else None,
                 index=0
             )
         ]
@@ -220,6 +221,9 @@ class AddDescriptiveWordIssue(AnalysisResponseIssue):
                 index=dist_word_idx
             )
         ]
+
+        # Setup boxes
+        issue.setup = self.setup_config
 
         return issue
 
@@ -290,18 +294,6 @@ class ContainsWordsToAvoidIssue(AnalysisResponseIssue):
 
         # Setup boxes
         issue.setup = self.setup_config
-
-        '''
-        issue.setup = [
-            Setup(
-                button="",
-                checkbox="",
-                header="Helpful Hint",
-                line1="Remove the word(s) <b>" + ", ".join(list_avoid) + "</b> from your search and try again.",
-                line2=""
-            )
-        ]
-        '''
 
         return issue
 
@@ -396,32 +388,6 @@ class NameRequiresConsentIssue(AnalysisResponseIssue):
 
         # Setup boxes
         issue.setup = self.setup_config
-
-        '''
-        issue.setup = [
-            Setup(
-                button="",
-                checkbox="",
-                header="Option 1",
-                line1="You can remove or replace the word(s) " + ", ".join(list_consent) + " and try your search again.",
-                line2=""
-            ),
-            Setup(
-                button="examine",
-                checkbox="",
-                header="Option 2",
-                line1="You can choose to submit this name for examination. Examination wait times are listed above.",
-                line2=""
-            ),
-            Setup(
-                button="consent",
-                checkbox="",
-                header="Option 3",
-                line1="This name can be auto-approved but you will be required to send confirmation of consent to the BC Business Registry.",
-                line2=""
-            )
-        ]
-        '''
 
         return issue
 
@@ -533,32 +499,6 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
         # Setup boxes
         issue.setup = self.setup_config
 
-        '''
-        issue.setup = [
-            Setup(
-                button="",
-                checkbox="",
-                header="Option 1",
-                line1="Add a word to the beginning of the name that sets it apart like a person's name or initials.",
-                line2="Or remove ${some-word} and replace it with a different word"
-            ),
-            Setup(
-                button="examine",
-                checkbox="",
-                header="Option 2",
-                line1="You can choose to submit this name for examination. Examination wait times are listed above.",
-                line2=""
-            ),
-            Setup(
-                button="consent",
-                checkbox="",
-                header="Option 3",
-                line1="If you are the registered owner of the existing name, it can be auto-approved but you are required to send confirmation of consent to the BC Business Registry.",
-                line2=""
-            )
-        ]
-        '''
-
         return issue
 
 
@@ -568,20 +508,24 @@ class DesignationMismatchIssue(AnalysisResponseIssue):
     issue = None
 
     def create_issue(self, procedure_result):
+        list_name = procedure_result.values['list_name']
+        incorrect_designations = procedure_result.values['incorrect_designations']
+        correct_designations = procedure_result.values['correct_designations']
+        # TODO: Implement the misplaced designations cases!
+        misplaced_any_designation = procedure_result.values['misplaced_any_designation']
+        misplaced_end_designation = procedure_result.values['misplaced_end_designation']
+
+        # TODO: If case comes back in upper case for the incorrect designations we won't have a match...
+        # Convert all strings to lower-case before comparing
+        incorrect_designations_lc = list(map(lambda d: d.lower() if isinstance(d, str) else '', incorrect_designations))
+        list_name_lc = list(map(lambda d: d.lower(), list_name))
+
         issue = NameAnalysisIssue(
             issue_type=self.issue_type,
-            line1="The <b>Cooperative</b> designation cannot be used with selected entity type of <b>Corporation</b>",
+            line1="The " + self._join_list_words(incorrect_designations) + " designation(s) cannot be used with selected entity type of " + self._join_list_words([self.entity_type]) + " </b>",
             line2=None,
             consenting_body=None,
-            # TODO: Replace with real values from ProcedureResult
-            designations=[
-                "Inc",
-                "Incorporated",
-                "Incorpore",
-                "Limite",
-                "Limited",
-                "Ltd"
-            ],
+            designations=correct_designations,
             show_reserve_button=False,
             show_examination_button=False,
             conflicts=None,
@@ -589,32 +533,20 @@ class DesignationMismatchIssue(AnalysisResponseIssue):
             name_actions=[]
         )
 
-        issue.name_actions = [
-            NameAction(
-                type=NameActions.HIGHLIGHT
-            )
-        ]
+        # Loop over the list_name words, we need to decide to do with each word
+        for word in list_name_lc:
+            name_word_idx = list_name.index(word)
+
+            # Highlight the descriptives
+            # <class 'list'>: ['mountain', 'view']
+            if word in incorrect_designations_lc:
+                issue.name_actions.append(NameAction(
+                    word=word,
+                    index=name_word_idx,
+                    type=NameActions.HIGHLIGHT
+                ))
 
         # Setup boxes
         issue.setup = self.setup_config
-
-        '''
-        issue.setup = [
-            Setup(
-                button="",
-                checkbox="",
-                header="Option 1",
-                line1="If your intention was to reserve a name for a BC Corporation, you can replace Cooperative with a comptatible designation. The following are allowed:",
-                line2=""
-            ),
-            Setup(
-                button="restart",
-                checkbox="",
-                header="Option 2",
-                line1="If you would like to start a Cooperative business instead of a Corporation, start your search over and change your business type to 'Cooperative'.",
-                line2=""
-            )
-        ]
-        '''
 
         return issue
