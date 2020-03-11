@@ -1,5 +1,6 @@
 # from app import application
 from namex import create_app
+
 import sys
 
 application = create_app()
