@@ -1,8 +1,9 @@
 import re
 import warnings
 
-from ..name_request.auto_analyse.name_analysis_utils import remove_french, remove_stop_words
+from .utils import remove_french, remove_stop_words
 
+# TODO: Both of these need to be re-implemented via API
 from name_processing.services.synonyms.synonym import SynonymService
 from name_processing.services.word_classification.word_classification import WordClassificationService
 
