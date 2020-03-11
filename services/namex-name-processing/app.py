@@ -7,6 +7,6 @@ import name_processing
 logging.basicConfig(level=logging.DEBUG)
 
 # Listen on all interfaces, and the catalog Python container expects the application to be on 8080.
-application = name_processing.create_application()
+application = name_processing.create_app()
 if __name__ == '__main__':
-    application.run(host='0.0.0.0', port=8080, debug=True)
+    application.run(host='0.0.0.0', port=8092, debug=True)
