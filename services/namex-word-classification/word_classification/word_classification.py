@@ -1,4 +1,4 @@
-from namex.models import db, WordClassification, WordClassificationSchema
+from word_classification.models import db, WordClassification, WordClassificationSchema
 
 from .token_classifier import TokenClassifier
 

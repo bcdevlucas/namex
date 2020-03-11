@@ -1,10 +1,10 @@
 import re
 import collections
 
-from namex.constants import \
+from synonyms.constants import \
     BCProtectedNameEntityTypes, BCUnprotectedNameEntityTypes, XproUnprotectedNameEntityTypes
 
-from namex.services.name_request.auto_analyse.name_analysis_utils import get_flat_list
+from synonyms.services.name_request.auto_analyse.name_analysis_utils import get_flat_list
 
 from . import SynonymServiceMixin
 from .. import DesignationPositionCodes

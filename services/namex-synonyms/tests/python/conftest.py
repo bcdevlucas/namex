@@ -8,8 +8,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import MetaData, DropConstraint
 from flask_migrate import Migrate, upgrade
 
-from namex import create_app, jwt as _jwt
-from namex.models import db as _db
+from synonyms import create_app, jwt as _jwt
+from synonyms.models import db as _db
 
 from . import FROZEN_DATETIME, EPOCH_DATETIME
 
@@ -43,6 +43,7 @@ def client(app):
     """
     return app.test_client()
 
+
 @pytest.fixture(scope="session")
 def jwt(app):
     """
@@ -50,10 +51,12 @@ def jwt(app):
     """
     return _jwt
 
+
 @pytest.fixture(scope="session")
 def solr(app):
     import os
     return os.getenv('SOLR_TEST_URL')
+
 
 @pytest.fixture(scope="session")
 def client_ctx(app):

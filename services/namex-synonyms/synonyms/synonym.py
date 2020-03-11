@@ -1,8 +1,8 @@
 import re
 from sqlalchemy import func
 
-from namex.models import Synonym
-from namex.criteria.synonym.query_criteria import SynonymQueryCriteria
+from synonyms.models import Synonym
+from synonyms.criteria.synonym.query_criteria import SynonymQueryCriteria
 
 from .mixins.designation import SynonymDesignationMixin
 from .mixins.model import SynonymModelMixin

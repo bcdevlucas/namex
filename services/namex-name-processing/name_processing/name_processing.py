@@ -3,8 +3,8 @@ import warnings
 
 from ..name_request.auto_analyse.name_analysis_utils import remove_french, remove_stop_words
 
-from namex.services.synonyms.synonym import SynonymService
-from namex.services.word_classification.word_classification import WordClassificationService
+from name_processing.services.synonyms.synonym import SynonymService
+from name_processing.services.word_classification.word_classification import WordClassificationService
 
 from .mixins.get_synonym_lists import GetSynonymListsMixin
 
