@@ -92,9 +92,9 @@ class ResolveConflictSetup(Setup):
 
 resolve_conflict_setup = ResolveConflictSetup(
     type="resolve_conflict",
-    header="Resolve Conflict",
-    line1="Add a word to the beginning of the name that sets it apart like a person’s name or initials.",
-    line2="Or remove the word(s) {{$list_conflicts}} and replace them with different ones."
+    header=Template("Resolve Conflict"),
+    line1=Template("Add a word to the beginning of the name that sets it apart like a person’s name or initials."),
+    line2=Template("Or remove the word(s) $list_remove and replace them with different ones.")
 )
 
 
@@ -104,12 +104,10 @@ class SendToExaminerSetup(Setup):
 
 send_to_examiner_setup = SendToExaminerSetup(
     type="send_to_examiner",
-    header="Send to Examiner",
-    line1="You can choose to submit this name for examination. Please check wait times at the top of the screen.",
-    line2="",
-    action="I want my name examined.",
-    button="",
-    checkbox=""
+    header=Template("Send to Examiner"),
+    line1=Template("You can choose to submit this name for examination. Please check wait times at the top of the screen."),
+    line2=Template(""),
+    action=Template("I want my name examined.")
 )
 
 
@@ -119,12 +117,10 @@ class ObtainConsentSetup(Setup):
 
 obtain_consent_setup = ObtainConsentSetup(
     type="obtain_consent",
-    header="Obtain Consent",
-    line1="This name can be auto-approved, but you will be required to send written consent to the BC Business Registry.",
-    line2="",
-    action="I am able to obtain and send written consent.",
-    button="",
-    checkbox=""
+    header=Template("Obtain Consent"),
+    line1=Template("This name can be auto-approved, but you will be required to send written consent to the BC Business Registry."),
+    line2=Template(""),
+    action=Template("I am able to obtain and send written consent.")
 )
 
 
@@ -134,12 +130,10 @@ class SelfConsentSetup(Setup):
 
 conflict_self_consent_setup = SelfConsentSetup(
     type="conflict_self_consent",
-    header="Conflict Self Consent",
-    line1="This name can be auto-approved if you are the registered owner of the conflicting name, but you are required to send written consent to the BC Business Registry.",
-    line2="",
-    action="I am the registered owner of the conflicting name. I will send written consent.",
-    button="",
-    checkbox=""
+    header=Template("Conflict Self Consent"),
+    line1=Template("This name can be auto-approved if you are the registered owner of the conflicting name, but you are required to send written consent to the BC Business Registry."),
+    line2=Template(""),
+    action=Template("I am the registered owner of the conflicting name. I will send written consent.")
 )
 
 
@@ -150,9 +144,9 @@ class ReplaceDesignationSetup(Setup):
 
 replace_designation_setup = ReplaceDesignationSetup(
     type="replace_designation",
-    header="Replace Designation",
-    line1="Change the designation from to one of the following:",
-    line2=""
+    header=Template("Replace Designation"),
+    line1=Template("Change the designation from to one of the following:"),
+    line2=Template("")
 )
 
 
@@ -162,8 +156,8 @@ class ChangeEntityTypeSetup(Setup):
 
 change_entity_type_setup = ChangeEntityTypeSetup(
     type="change_entity_type",
-    header="Change Entity Type",
-    line1="If you would like to start a {{$correct_designation}} business instead of a {{$incorrect_designation}} start your search over and change your entity type to {{$entity_type}}",
-    line2="",
-    label="Change {{$entity_type}} to {{$correct_designation}}"
+    header=Template("Change Entity Type"),
+    line1=Template("If you would like to start a $correct_designations business instead of a $incorrect_designations start your search over and change your entity type to $entity_type."),
+    line2=Template(""),
+    label=Template("Change $entity_type to $correct_designations")
 )

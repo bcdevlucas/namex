@@ -500,6 +500,18 @@ class CorporateNameConflictIssue(AnalysisResponseIssue):
 
         # Setup boxes
         issue.setup = self.setup_config
+        # Replace template strings in setup boxes
+        for setup_item in issue.setup:
+            # Loop over properties
+            for prop in vars(setup_item):
+                if isinstance(setup_item.__dict__[prop], Template):
+                    # Render the Template string, replacing placeholder vars
+                    setattr(setup_item, prop, setup_item.__dict__[prop].safe_substitute({
+                        'list_name': self._join_list_words(list_name),
+                        'list_remove': self._join_list_words(list_remove),
+                        'list_dist': self._join_list_words(list_dist_words),
+                        'list_desc': self._join_list_words(list_desc_words)
+                    }))
 
         return issue
 
@@ -550,5 +562,17 @@ class DesignationMismatchIssue(AnalysisResponseIssue):
 
         # Setup boxes
         issue.setup = self.setup_config
+        # Replace template strings in setup boxes
+        for setup_item in issue.setup:
+            # Loop over properties
+            for prop in vars(setup_item):
+                if isinstance(setup_item.__dict__[prop], Template):
+                    # Render the Template string, replacing placeholder vars
+                    setattr(setup_item, prop, setup_item.__dict__[prop].safe_substitute({
+                        'list_name': self._join_list_words(list_name),
+                        'correct_designations': self._join_list_words(correct_designations),
+                        'incorrect_designations': self._join_list_words(incorrect_designations),
+                        'entity_type': self.entity_type  # TODO: Map this CODE!
+                    }))
 
         return issue
