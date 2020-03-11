@@ -1,4 +1,4 @@
-from word_classification.models import db, WordClassification, WordClassificationSchema
+from word_classification.models import WordClassification
 
 from .token_classifier import TokenClassifier
 
