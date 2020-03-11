@@ -1,13 +1,13 @@
 import re
 import collections
 
-from synonyms.constants import \
+from common.constants import \
     BCProtectedNameEntityTypes, BCUnprotectedNameEntityTypes, XproUnprotectedNameEntityTypes
 
 from synonyms.services.name_request.auto_analyse.name_analysis_utils import get_flat_list
 
 from . import SynonymServiceMixin
-from .. import DesignationPositionCodes
+from ..enums import DesignationPositionCodes
 
 
 class SynonymDesignationMixin(SynonymServiceMixin):
