@@ -13,6 +13,8 @@ from namex.services.synonyms import DesignationPositionCodes
 from namex.services.word_classification.token_classifier \
     import TokenClassifier
 
+from .name_analysis_utils import list_distinctive_descriptive_same, list_distinctive_descriptive
+
 '''
 The UnprotectedNameAnalysisService returns an analysis response using the strategies in analysis_strategies.py
 The response cases are as follows:
@@ -151,14 +153,17 @@ class UnprotectedNameAnalysisService(NameAnalysisDirector):
         list_name = self.name_tokens
         results = []
 
-        check_words_to_avoid = builder.check_words_to_avoid(list_name, self.processed_name)
-        if not check_words_to_avoid.is_valid:
-            results.append(check_words_to_avoid)
-            return results
-            #  Do not continue
+        if self.token_classifier.distinctive_word_tokens == self.token_classifier.descriptive_word_tokens:
+            self._list_dist_words, self._list_desc_words = list_distinctive_descriptive_same(self.name_tokens)
+
+        else:
+            self._list_dist_words, self._list_desc_words = list_distinctive_descriptive(self.name_tokens,
+                                                                                        self.token_classifier.distinctive_word_tokens,
+                                                                                        self.token_classifier.descriptive_word_tokens)
 
         # Return any combination of these checks
-        check_conflicts = builder.search_exact_match(self.processed_name, self.name_tokens)
+        check_conflicts = builder.search_conflicts(self._list_dist_words, self._list_desc_words, self.name_tokens,
+                                                   self.processed_name, True)
 
         if not check_conflicts.is_valid:
             results.append(check_conflicts)

@@ -121,7 +121,7 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
            list_desc = ['FOOD', 'GROWERS']
     @return ProcedureResult
     '''
-    def search_conflicts(self, list_dist_words, list_desc_words, list_name, name):
+    def search_conflicts(self, list_dist_words, list_desc_words, list_name, name, exact_match=False):
         syn_svc = self.synonym_service
 
         result = ProcedureResult()
@@ -161,12 +161,13 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder):
                                                                                         matches_response, w_dist,
                                                                                         w_desc, list_name, name)
 
-        most_similar_names.extend(
-            list({k for k, v in
-                  sorted(dict_highest_counter.items(), key=lambda item: (-item[1], item[0]))[0:MAX_MATCHES_LIMIT]}))
+        dict_most_similar_names = {k: v for k, v in
+                                   sorted(dict_highest_counter.items(), key=lambda item: (-item[1], item[0]))[
+                                   0:MAX_MATCHES_LIMIT]}
 
-        for element in most_similar_names:
-            response.update({element: dict_highest_detail.get(element, {})})
+        for key, value in dict_most_similar_names.items():
+            if (exact_match and value == 1.0) or not exact_match:
+                response.update({key: dict_highest_detail.get(key, {})})
 
         if response:
             result.is_valid = False

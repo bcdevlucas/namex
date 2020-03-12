@@ -223,10 +223,10 @@ class Request(db.Model):
         query = cls.build_query_descriptive(desc_substitution_list, query)
         return query
 
-    @classmethod
-    def get_query_exact_match(cls, prep_name):
-        query = cls.build_query_exact_match(prep_name)
-        return query
+    # @classmethod
+    # def get_query_exact_match(cls, prep_name):
+    #     query = cls.build_query_exact_match(prep_name)
+    #     return query
 
     @classmethod
     def build_query_distinctive(cls, dist_all_permutations, length):
@@ -256,17 +256,17 @@ class Request(db.Model):
 
         return query
 
-    @classmethod
-    def build_query_exact_match(cls, prep_name):
-        query = "select n.name " + \
-                "from requests r, names n " + \
-                "where r.id = n.nr_id and " + \
-                "r.state_cd IN ('APPROVED','CONDITIONAL') and " + \
-                "r.request_type_cd IN ('PA','CR','CP','FI','SO', 'UL','CUL','CCR','CFI','CCP','CSO','CCC','CC') and " + \
-                "n.state IN ('APPROVED','CONDITION') and " + \
-                "lower(n.name) = " + "'" + prep_name + "'"
-
-        return query
+    # @classmethod
+    # def build_query_exact_match(cls, prep_name):
+    #     query = "select n.name " + \
+    #             "from requests r, names n " + \
+    #             "where r.id = n.nr_id and " + \
+    #             "r.state_cd IN ('APPROVED','CONDITIONAL') and " + \
+    #             "r.request_type_cd IN ('PA','CR','CP','FI','SO', 'UL','CUL','CCR','CFI','CCP','CSO','CCC','CC') and " + \
+    #             "n.state IN ('APPROVED','CONDITION') and " + \
+    #             "lower(n.name) = " + "'" + prep_name + "'"
+    #
+    #     return query
 
         # END NEW NAME_REQUEST SERVICE METHODS, WE WILL REFACTOR THESE SHORTLY
 
