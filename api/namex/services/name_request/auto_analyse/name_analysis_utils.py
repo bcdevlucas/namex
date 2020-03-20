@@ -44,7 +44,7 @@ def remove_french(text, fr_designation_end_list):
 
 
 def remove_french(text):
-    text = re.sub(r'/(\w+(?:[^\w\n]+\w+)+[^\w\n]*$)?',
+    text = re.sub(r'/([A-Za-z]+(?:[^[A-Za-z]\n]+[A-Za-z]+)+[^[A-Za-z]\n]*$)?',
                   ' ',
                   text,
                   0,
