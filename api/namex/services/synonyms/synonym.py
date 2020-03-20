@@ -196,7 +196,7 @@ class SynonymService(SynonymDesignationMixin, SynonymModelMixin):
         text = re.sub(r'\s+',
                       ' ',
                       re.sub(
-                          r'(^(?:\d+(?:' + ordinal_suffixes + ')?\\s*)+(?=[^\\d]*$)|\\b(?:' + numbers + ')\\s*)(?!.*?(?:' + stand_alone_words + '$))|(?<=\\b[A-Za-z]\\b) +(?=[a-zA-Z]\\b)',
+                          r'(^(?:\d+(?:' + ordinal_suffixes + ')?\\s*)+(?=[^\\d]*$)|\\b(?:' + numbers + ')\\b)(?!.*?(?:' + stand_alone_words + '$))|(?<=\\b[A-Za-z]\\b) +(?=[a-zA-Z]\\b)',
                           '',
                           #re.sub(r'(?<=[A-Za-z]\b )([ 0-9]*(' + ordinal_suffixes + ')?\\b)',
                           #       '',
