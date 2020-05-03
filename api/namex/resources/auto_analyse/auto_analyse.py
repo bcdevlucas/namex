@@ -23,6 +23,8 @@ from namex.services.name_request.name_analysis_builder_v2.name_analysis_builder 
 from namex.services.name_request.auto_analyse.protected_name_analysis import ProtectedNameAnalysisService
 from namex.services.name_request.auto_analyse.unprotected_name_analysis import UnprotectedNameAnalysisService
 
+from namex import jwt
+
 setup_logging()  # It's important to do this first
 
 # Register a local namespace for the requests
@@ -135,8 +137,12 @@ class NameAnalysis(Resource):
       - Always to examination
     '''
     @staticmethod
-    @cors.crossdomain(origin='*')
-    # @jwt.requires_auth
+    @cors.crossdomain(
+        origin='*',
+        headers=['Content-Type', 'Authorization'],
+        expose_headers=['Content-Type', 'Authorization']
+    )
+    @jwt.requires_auth
     # @api.expect()
     @api.doc(params={
         'name': 'A company / organization name string',
@@ -146,6 +152,19 @@ class NameAnalysis(Resource):
         # 'request_type': 'A request action code'  # TODO: Leave this as request_type for now...
     })
     def get():
+        """valid access token and assigned roles are required
+            """
+        #if not identifier:
+        #    return ({'message':
+        #                 _('No id provided for:') + identifier},
+        #            HTTPStatus.BAD_REQUEST)
+
+        # check authorization
+        #if not authorized(identifier, jwt, action=['edit']):
+        #    return jsonify({'message':
+        #                        _('You are not authorized {to} for:') + identifier}), \
+        #           HTTPStatus.UNAUTHORIZED
+
         name = unquote_plus(request.args.get('name').strip()) if request.args.get('name') else None
         location = unquote_plus(request.args.get('location').strip()) if request.args.get('location') else None
         entity_type = unquote_plus(request.args.get('entity_type').strip()) if request.args.get('entity_type') else None
