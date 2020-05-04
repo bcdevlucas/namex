@@ -9,6 +9,10 @@ from .events import api as events_api
 from .auto_analyse.auto_analyse import api as auto_analyse_api
 from .name_requests import api as name_request_api
 
+from .auth_sample.auth_sample_basic import api as auth_sample_basic_api
+from .auth_sample.auth_sample_with_roles import api as auth_sample_with_roles_api
+from .auth_sample.auth_sample_with_validation import api as auth_sample_with_validation_api
+
 # This will add the Authorize button to the swagger docs
 # TODO oauth2 & openid may not yet be supported by restplus <- check on this
 authorizations = {
@@ -35,3 +39,8 @@ api.add_namespace(exact_match_api, path='/exact-match')
 api.add_namespace(events_api, path='/events')
 api.add_namespace(auto_analyse_api, path='/name-analysis')
 api.add_namespace(name_request_api, path='/namerequests')
+
+# Sample Auth APIs
+api.add_namespace(auth_sample_basic_api, path='/auth-basic')
+api.add_namespace(auth_sample_with_roles_api, path='/auth-with-roles')
+api.add_namespace(auth_sample_with_validation_api, path='/auth-with-validation')

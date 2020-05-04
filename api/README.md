@@ -33,8 +33,10 @@ docs/           - Project Documentation
 └── icons         
 
 openshift/      - OpenShift-specific files
-├── scripts     - helper scripts
-└── templates   - application templates
+├── scripts     - Helper scripts
+└── templates   - Application templates
+
+auth-server/    - Launch a Local Keycloak w. Postgres instance
 ```
 
 ## Deployment (Local Development)
@@ -45,6 +47,10 @@ openshift/      - OpenShift-specific files
 ## Deployment (OpenShift)
 
 See (openshift/Readme.md)
+
+## Running Local Keycloak Server
+
+Run ```docker-compose up``` from the ```/auth-server``` folder
 
 ## Getting Help or Reporting an Issue
 
