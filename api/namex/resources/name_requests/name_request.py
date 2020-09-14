@@ -7,7 +7,7 @@ from namex.utils.logging import setup_logging
 from namex.utils.auth import cors_preflight
 from namex.utils.api_resource import handle_exception
 
-from namex.constants import NameRequestActions, RequestAction, PaymentState, PaymentStatusCode
+from namex.constants import NameRequestActions, NameRequestRollbackActions, RequestAction, PaymentState, PaymentStatusCode
 from namex.models import Request, State, Payment
 
 from namex.services.name_request.name_request_state import get_nr_state_actions
@@ -472,17 +472,18 @@ class NameRequestFields(NameRequestResource):
 
 
 @cors_preflight('PATCH')
-@api.route('/<string:nr_num>/rollback', strict_slashes=False, methods=['PATCH', 'OPTIONS'])
+@api.route('/<string:nr_num>/rollback/<string:action>', strict_slashes=False, methods=['PATCH', 'OPTIONS'])
 @api.doc(params={
     'nr_num': 'NR Number - This field is required',
 })
 class NameRequestRollback(NameRequestResource):
     @api.expect(nr_request)
     @cors.crossdomain(origin='*')
-    def patch(self, nr_num):
+    def patch(self, nr_num, action):
         """
         Roll back a Name Request to a usable state in case of a frontend error.
         :param nr_num:
+        :param action:
         :return:
         """
         try:
@@ -497,20 +498,17 @@ class NameRequestRollback(NameRequestResource):
             nr_svc.nr_num = nr_model.nrNum
             nr_svc.nr_id = nr_model.id
 
-            valid_states = State.VALID_STATES
-
             # This could be moved out, but it's fine here for now
             def validate_patch_request(data):
+                # TODO: Validate the data payload
                 # Use the NR model state as the default, as the state change may not be included in the PATCH request
-                request_state = data.get('stateCd', nr_model.stateCd)
                 is_valid = False
                 msg = ''
                 # This handles updates if the NR state is 'patchable'
-                if request_state in valid_states:
-                    # Get the SQL alchemy columns and associations
+                if NameRequestRollbackActions.has_value(action):
                     is_valid = True
                 else:
-                    msg = 'Invalid state change requested - the NR state cannot be changed to [' + data.get('stateCd', '') + ']'
+                    msg = 'Invalid rollback action'
 
                 return is_valid, msg
 
@@ -520,11 +518,8 @@ class NameRequestRollback(NameRequestResource):
             if not is_valid_patch:
                 raise InvalidInputError(message=validation_msg)
 
-            # if nr_model.payment_token is not None:
-            #    raise NameRequestException(message='Invalid request state for PATCH - payment token should not be present!')
-
             # This handles updates if the NR state is 'patchable'
-            nr_model = self.handle_patch_rollback(nr_model)
+            nr_model = self.handle_patch_rollback(nr_model, action)
 
             current_app.logger.debug(nr_model.json())
             response_data = nr_model.json()
@@ -537,11 +532,11 @@ class NameRequestRollback(NameRequestResource):
         except Exception as err:
             return handle_exception(err, repr(err), 500)
 
-    def handle_patch_rollback(self, nr_model):
+    def handle_patch_rollback(self, nr_model, action):
         """
-        TODO: Handle rollback to a specific state?
-        Cancel the Name Request.
+        Roll back the Name Request.
         :param nr_model:
+        :param action:
         :return:
         """
         # This handles updates if the NR state is 'patchable'

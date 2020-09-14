@@ -14,7 +14,8 @@ from namex.models import Request as RequestDAO, Payment as PaymentDAO
 
 from namex.services.payment.exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
 from namex.services.payment.payments import get_payment, create_payment, update_payment, CreatePaymentRequest, UpdatePaymentRequest
-
+from namex.services.name_request.utils import has_active_payment, get_active_payment
+from namex.resources.name_requests.utils import parse_nr_num
 from .api_namespace import api as payment_api
 from .utils import build_payment_request, merge_payment_request
 
@@ -120,94 +121,6 @@ def handle_auth_error(ex):
     return response
 
 
-@cors_preflight('GET, POST')
-@payment_api.route('/<string:nr_num>', strict_slashes=False, methods=['POST', 'OPTIONS'])
-@payment_api.doc(params={
-})
-class Payments(Resource):
-    @staticmethod
-    @cors.crossdomain(origin='*')
-    # @jwt.requires_auth
-    @payment_api.expect(payment_request_schema)
-    @payment_api.response(200, 'Success', '')
-    # @marshal_with()
-    @payment_api.doc(params={
-        'nr_num': 'Name Request number'
-    })
-    def post(nr_num):
-        try:
-            # TODO: Validate NR string format
-            # if not RequestDAO.validNRFormat(nr_num):
-            #    return None, None, jsonify(message='NR number is not in a valid format \'NR 9999999\''), 400
-
-            nr_model = RequestDAO.find_by_nr(nr_num)
-            if not nr_model:
-                # Should this be a 400 or 404... hmmm
-                return None, None, jsonify(message='{nr_num} not found'.format(nr_num=nr_num)), 400
-
-            json_input = request.get_json()
-            payment_request = {}
-            if not json_input:
-                # return jsonify(message=MSG_BAD_REQUEST_NO_JSON_BODY), 400
-                # Grab the data from the NR, if it exists
-                payment_request = build_payment_request(nr_model)
-            elif isinstance(json_input, dict):
-                payment_request = merge_payment_request(nr_model, json_input)
-            elif isinstance(json_input, str):
-                payment_request = merge_payment_request(nr_model, json.loads(json_input))
-
-            # Grab the info we need off the request
-            payment_info = payment_request.get('paymentInfo')
-            filing_info = payment_request.get('filingInfo')
-            business_info = payment_request.get('businessInfo')
-
-            # Create our payment request
-            req = PaymentRequest(
-                payment_info=payment_info,
-                filing_info=filing_info,
-                business_info=business_info
-            )
-
-            payment_response = create_payment(req)
-            if not payment_response:
-                raise PaymentServiceError(message=MSG_ERROR_CREATING_RESOURCE)
-
-            if payment_response and payment_response.status_code == PaymentStatusCode.CREATED.value:
-                # Save the payment info to Postgres
-                payment = PaymentDAO()
-                payment.nrId = nr_model.id
-                payment.payment_token = str(payment_response.id)
-                payment.payment_completion_date = payment_response.created_on
-                payment.payment_status_code = PaymentState.CREATED.value
-                payment.save_to_db()
-
-                # Wrap the response, providing info from both the SBC Pay response and the payment we created
-                """
-                data = jsonify({
-                    'id': payment.id,
-                    'nrId': payment.nrId,
-                    'token': payment.payment_token,
-                    'statusCode': payment.payment_status_code,
-                    'completionDate': payment.payment_completion_date,
-                    'payment': payment.as_dict(),
-                    'transaction': payment_response.to_dict()
-                })
-                """
-
-                data = jsonify(payment_response.to_dict())
-                response = make_response(data, 201)
-                return response
-
-        except PaymentServiceError as err:
-            return handle_exception(err, err.message, 500)
-        except SBCPaymentException as err:
-            return handle_exception(err, err.message, 500)
-        except SBCPaymentError as err:
-            return handle_exception(err, err.message, 500)
-        except Exception as err:
-            return handle_exception(err, err, 500)
-
-
 @cors_preflight('GET, PUT')
 @payment_api.route('/<string:payment_identifier>', strict_slashes=False, methods=['GET', 'PUT', 'OPTIONS'])
 @payment_api.doc(params={
@@ -295,3 +208,181 @@ class Extra(Resource):
         pass
 
 
+@cors_preflight('GET, POST')
+@payment_api.route('/<string:nr_num>', strict_slashes=False, methods=['POST', 'OPTIONS'])
+@payment_api.doc(params={
+})
+class NameRequestPayments(Resource):
+    @staticmethod
+    @cors.crossdomain(origin='*')
+    # @jwt.requires_auth
+    @payment_api.expect(payment_request_schema)
+    @payment_api.response(200, 'Success', '')
+    # @marshal_with()
+    @payment_api.doc(params={
+        'nr_num': 'Name Request number'
+    })
+    def post(nr_num):
+        try:
+            # Find the existing name request
+            nr_num = parse_nr_num(nr_num)
+            nr_model = RequestDAO.find_by_nr(nr_num)
+            if not nr_model:
+                # Should this be a 400 or 404... hmmm
+                return None, None, jsonify(message='{nr_num} not found'.format(nr_num=nr_num)), 400
+
+            json_input = request.get_json()
+            payment_request = {}
+            if not json_input:
+                # return jsonify(message=MSG_BAD_REQUEST_NO_JSON_BODY), 400
+                # Grab the data from the NR, if it exists
+                payment_request = build_payment_request(nr_model)
+            elif isinstance(json_input, dict):
+                payment_request = merge_payment_request(nr_model, json_input)
+            elif isinstance(json_input, str):
+                payment_request = merge_payment_request(nr_model, json.loads(json_input))
+
+            # Grab the info we need off the request
+            payment_info = payment_request.get('paymentInfo')
+            filing_info = payment_request.get('filingInfo')
+            business_info = payment_request.get('businessInfo')
+
+            # Create our payment request
+            req = PaymentRequest(
+                payment_info=payment_info,
+                filing_info=filing_info,
+                business_info=business_info
+            )
+
+            payment_response = create_payment(req)
+
+            if not payment_response:
+                raise PaymentServiceError(message=MSG_ERROR_CREATING_RESOURCE)
+
+            if payment_response and payment_response.status_code == PaymentStatusCode.CREATED.value:
+                # Save the payment info to Postgres
+                payment = PaymentDAO()
+                payment.nrId = nr_model.id
+                payment.payment_token = str(payment_response.id)
+                payment.payment_completion_date = payment_response.created_on
+                payment.payment_status_code = PaymentState.CREATED.value
+                payment.save_to_db()
+
+                # Wrap the response, providing info from both the SBC Pay response and the payment we created
+                data = jsonify({
+                    'id': payment.id,
+                    'nrId': payment.nrId,
+                    'token': payment.payment_token,
+                    'statusCode': payment.payment_status_code,
+                    'completionDate': payment.payment_completion_date,
+                    'payment': payment.as_dict(),
+                    'sbcPayment': payment_response.to_dict()
+                })
+
+                response = make_response(data, 201)
+                return response
+
+        except PaymentServiceError as err:
+            return handle_exception(err, err.message, 500)
+        except SBCPaymentException as err:
+            return handle_exception(err, err.message, 500)
+        except SBCPaymentError as err:
+            return handle_exception(err, err.message, 500)
+        except Exception as err:
+            return handle_exception(err, err, 500)
+
+
+@cors_preflight('GET, PUT')
+@payment_api.route('/<string:nr_num>/payment/<string:payment_id>', strict_slashes=False, methods=['GET', 'PUT', 'OPTIONS'])
+@payment_api.doc(params={
+    'payment_id': ''
+})
+class NameRequestPayment(Resource):
+    @staticmethod
+    @cors.crossdomain(origin='*')
+    # @jwt.requires_auth
+    @payment_api.response(200, 'Success', '')
+    # @marshal_with(payment_response_schema)
+    def get(nr_num, payment_id):
+        try:
+            # Find the existing name request
+            nr_num = parse_nr_num(nr_num)
+            nr_model = RequestDAO.find_by_nr(nr_num)
+            if not nr_model:
+                # Should this be a 400 or 404... hmmm
+                return None, None, jsonify(message='{nr_num} not found'.format(nr_num=nr_num)), 400
+
+            payment_id = int(clean_url_path_param(payment_id))
+            payment = PaymentDAO.query.get(payment_id)
+
+            payment_response = get_payment(payment.payment_token)
+
+            if not payment_response:
+                return jsonify(message=MSG_NOT_FOUND), 404  # TODO: What if we have a record?
+
+            # Wrap the response, providing info from both the SBC Pay response and the payment we created
+            data = jsonify({
+                'id': payment.id,
+                'nrId': payment.nrId,
+                'token': payment.payment_token,
+                'statusCode': payment.payment_status_code,
+                'completionDate': payment.payment_completion_date,
+                'payment': payment.as_dict(),
+                'transaction': payment_response.to_dict()
+            })
+
+            response = make_response(data, 200)
+            return response
+
+        except Exception as err:
+            return jsonify(message=MSG_SERVER_ERROR + ' ' + str(err)), 500
+
+    @staticmethod
+    @cors.crossdomain(origin='*')
+    # @jwt.requires_auth
+    @payment_api.expect(payment_request_schema)
+    @payment_api.response(200, 'Success', '')
+    # @marshal_with()
+    def put(nr_num, payment_id):
+        try:
+            # Find the existing name request
+            nr_num = parse_nr_num(nr_num)
+            nr_model = RequestDAO.find_by_nr(nr_num)
+            if not nr_model:
+                # Should this be a 400 or 404... hmmm
+                return None, None, jsonify(message='{nr_num} not found'.format(nr_num=nr_num)), 400
+
+            payment_id = clean_url_path_param(payment_id)
+
+            json_input = request.get_json()
+            if not json_input:
+                return jsonify(message=MSG_BAD_REQUEST_NO_JSON_BODY), 400
+
+            # Grab the info we need off the request
+            payment_info = json_input.get('paymentInfo')
+            filing_info = json_input.get('filingInfo')
+            business_info = json_input.get('businessInfo')
+
+            # Update our payment request
+            req = PaymentRequest(
+                payment_info=payment_info,
+                filing_info=filing_info,
+                business_info=business_info
+            )
+
+            payment_response = update_payment(payment_id, req)
+            if not payment_response:
+                raise PaymentServiceError(message=MSG_ERROR_CREATING_RESOURCE)
+
+            data = jsonify(payment_response.to_dict())
+            response = make_response(data, 200)
+            return response
+
+        except PaymentServiceError as err:
+            return handle_exception(err, err.message, 500)
+        except SBCPaymentException as err:
+            return handle_exception(err, err.message, 500)
+        except SBCPaymentError as err:
+            return handle_exception(err, err.message, 500)
+        except Exception as err:
+            return handle_exception(err, err, 500)
