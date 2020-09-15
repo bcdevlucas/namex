@@ -545,3 +545,24 @@ class NameRequestRollback(NameRequestResource):
         # This handles the updates for NRO and Solr, if necessary
         self.update_records_in_network_services(nr_model)
         return nr_model
+
+    def update_nr_fields(self, nr_model, new_state):
+        """
+        State changes handled:
+        - to CANCELLED
+        - to INPROGRESS
+        - to HOLD
+        - to APPROVED
+        - to REJECTED
+        :param nr_model:
+        :param new_state:
+        :return:
+        """
+        nr_svc = self.nr_service
+
+        # Use apply_state_change to change state, as it enforces the State change pattern
+        # apply_state_change takes the model, updates it to the specified state, and executes the callback handler
+        if new_state in State.VALID_STATES:
+            nr_model = nr_svc.apply_state_change(nr_model, new_state, self.handle_nr_patch)
+
+        return nr_model
