@@ -14,8 +14,7 @@ from namex.models import Request as RequestDAO, Payment as PaymentDAO
 
 from namex.services.payment.exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
 from namex.services.payment.payments import get_payment, create_payment, update_payment, CreatePaymentRequest, UpdatePaymentRequest
-from namex.services.name_request.utils import has_active_payment, get_active_payment
-from namex.resources.name_requests.utils import parse_nr_num
+
 from .api_namespace import api as payment_api
 from .utils import build_payment_request, merge_payment_request
 
@@ -209,7 +208,7 @@ class Extra(Resource):
 
 
 @cors_preflight('GET, POST')
-@payment_api.route('/<string:nr_num>', strict_slashes=False, methods=['POST', 'OPTIONS'])
+@payment_api.route('/<int:nr_id>', strict_slashes=False, methods=['POST', 'OPTIONS'])
 @payment_api.doc(params={
 })
 class NameRequestPayments(Resource):
@@ -220,16 +219,16 @@ class NameRequestPayments(Resource):
     @payment_api.response(200, 'Success', '')
     # @marshal_with()
     @payment_api.doc(params={
-        'nr_num': 'Name Request number'
+        'nr_id': 'Name Request number'
     })
-    def post(nr_num):
+    def post(nr_id):
         try:
             # Find the existing name request
-            nr_num = parse_nr_num(nr_num)
-            nr_model = RequestDAO.find_by_nr(nr_num)
+            nr_model = RequestDAO.query.get(nr_id)
+
             if not nr_model:
                 # Should this be a 400 or 404... hmmm
-                return None, None, jsonify(message='{nr_num} not found'.format(nr_num=nr_num)), 400
+                return None, None, jsonify(message='{nr_id} not found'.format(nr_id=nr_id)), 400
 
             json_input = request.get_json()
             payment_request = {}
@@ -293,8 +292,9 @@ class NameRequestPayments(Resource):
 
 
 @cors_preflight('GET, PUT')
-@payment_api.route('/<string:nr_num>/payment/<string:payment_id>', strict_slashes=False, methods=['GET', 'PUT', 'OPTIONS'])
+@payment_api.route('/<int:nr_id>/payment/<string:payment_id>', strict_slashes=False, methods=['GET', 'PUT', 'OPTIONS'])
 @payment_api.doc(params={
+    'nr_id': '',
     'payment_id': ''
 })
 class NameRequestPayment(Resource):
@@ -303,14 +303,14 @@ class NameRequestPayment(Resource):
     # @jwt.requires_auth
     @payment_api.response(200, 'Success', '')
     # @marshal_with(payment_response_schema)
-    def get(nr_num, payment_id):
+    def get(nr_id, payment_id):
         try:
             # Find the existing name request
-            nr_num = parse_nr_num(nr_num)
-            nr_model = RequestDAO.find_by_nr(nr_num)
+            nr_model = RequestDAO.query.get(nr_id)
+
             if not nr_model:
                 # Should this be a 400 or 404... hmmm
-                return None, None, jsonify(message='{nr_num} not found'.format(nr_num=nr_num)), 400
+                return None, None, jsonify(message='{nr_id} not found'.format(nr_id=nr_id)), 400
 
             payment_id = int(clean_url_path_param(payment_id))
             payment = PaymentDAO.query.get(payment_id)
@@ -343,14 +343,14 @@ class NameRequestPayment(Resource):
     @payment_api.expect(payment_request_schema)
     @payment_api.response(200, 'Success', '')
     # @marshal_with()
-    def put(nr_num, payment_id):
+    def put(nr_id, payment_id):
         try:
             # Find the existing name request
-            nr_num = parse_nr_num(nr_num)
-            nr_model = RequestDAO.find_by_nr(nr_num)
+            nr_model = RequestDAO.query.get(nr_id)
+
             if not nr_model:
                 # Should this be a 400 or 404... hmmm
-                return None, None, jsonify(message='{nr_num} not found'.format(nr_num=nr_num)), 400
+                return None, None, jsonify(message='{nr_id} not found'.format(nr_id=nr_id)), 400
 
             payment_id = clean_url_path_param(payment_id)
 
