@@ -550,10 +550,6 @@ class NameRequestRollback(NameRequestResource):
         """
         State changes handled:
         - to CANCELLED
-        - to INPROGRESS
-        - to HOLD
-        - to APPROVED
-        - to REJECTED
         :param nr_model:
         :param new_state:
         :return:
