@@ -328,7 +328,7 @@ class NameRequestPayment(Resource):
                 'statusCode': payment.payment_status_code,
                 'completionDate': payment.payment_completion_date,
                 'payment': payment.as_dict(),
-                'transaction': payment_response.to_dict()
+                'sbcPayment': payment_response.to_dict()
             })
 
             response = make_response(data, 200)
