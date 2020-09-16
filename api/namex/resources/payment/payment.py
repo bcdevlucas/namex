@@ -144,8 +144,15 @@ class Payment(Resource):
             response = make_response(data, 200)
             return response
 
+        except PaymentServiceError as err:
+            return handle_exception(err, err.message, 500)
+        except SBCPaymentException as err:
+            return handle_exception(err, err.message, err.status_code)
+        except SBCPaymentError as err:
+            return handle_exception(err, err.message, 500)
         except Exception as err:
-            return jsonify(message=MSG_SERVER_ERROR + ' ' + str(err)), 500
+
+            return handle_exception(err, err, 500)
 
     @staticmethod
     @cors.crossdomain(origin='*')
@@ -184,7 +191,7 @@ class Payment(Resource):
         except PaymentServiceError as err:
             return handle_exception(err, err.message, 500)
         except SBCPaymentException as err:
-            return handle_exception(err, err.message, 500)
+            return handle_exception(err, err.message, err.status_code)
         except SBCPaymentError as err:
             return handle_exception(err, err.message, 500)
         except Exception as err:
@@ -284,7 +291,7 @@ class NameRequestPayments(Resource):
         except PaymentServiceError as err:
             return handle_exception(err, err.message, 500)
         except SBCPaymentException as err:
-            return handle_exception(err, err.message, 500)
+            return handle_exception(err, err.message, err.status_code)
         except SBCPaymentError as err:
             return handle_exception(err, err.message, 500)
         except Exception as err:
@@ -334,8 +341,14 @@ class NameRequestPayment(Resource):
             response = make_response(data, 200)
             return response
 
+        except PaymentServiceError as err:
+            return handle_exception(err, err.message, 500)
+        except SBCPaymentException as err:
+            return handle_exception(err, err.message, err.status_code)
+        except SBCPaymentError as err:
+            return handle_exception(err, err.message, 500)
         except Exception as err:
-            return jsonify(message=MSG_SERVER_ERROR + ' ' + str(err)), 500
+            return handle_exception(err, err, 500)
 
     @staticmethod
     @cors.crossdomain(origin='*')
@@ -381,7 +394,7 @@ class NameRequestPayment(Resource):
         except PaymentServiceError as err:
             return handle_exception(err, err.message, 500)
         except SBCPaymentException as err:
-            return handle_exception(err, err.message, 500)
+            return handle_exception(err, err.message, err.status_code)
         except SBCPaymentError as err:
             return handle_exception(err, err.message, 500)
         except Exception as err:

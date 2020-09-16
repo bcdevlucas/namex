@@ -72,7 +72,7 @@ class PaymentInvoices(Resource):
         except SBCPaymentException as err:
             return handle_exception(err, err.message, 500)
         except SBCPaymentError as err:
-            return handle_exception(err, err.message, 500)
+            return handle_exception(err, err.message, err.status_code)
         except Exception as err:
             return handle_exception(err, err, 500)
 
@@ -108,7 +108,7 @@ class PaymentInvoice(Resource):
         except PaymentServiceError as err:
             return handle_exception(err, err.message, 500)
         except SBCPaymentException as err:
-            return handle_exception(err, err.message, 500)
+            return handle_exception(err, err.message, err.status_code)
         except SBCPaymentError as err:
             return handle_exception(err, err.message, 500)
         except Exception as err:
