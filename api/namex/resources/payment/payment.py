@@ -151,7 +151,6 @@ class Payment(Resource):
         except SBCPaymentError as err:
             return handle_exception(err, err.message, 500)
         except Exception as err:
-
             return handle_exception(err, err, 500)
 
     @staticmethod

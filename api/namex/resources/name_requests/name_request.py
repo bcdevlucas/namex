@@ -259,7 +259,7 @@ class NameRequestFields(NameRequestResource):
             nr_action = NameRequestActions[nr_action].value \
                 if NameRequestActions.has_value(nr_action) \
                 else NameRequestActions.EDIT.value
-            nr_model = Request.find_by_nr(nr_num)
+
             nr_svc.nr_num = nr_model.nrNum
             nr_svc.nr_id = nr_model.id
 
