@@ -13,13 +13,12 @@ from .VERSION import __version__
 from synonyms.utils.run_version import get_run_version
 from flask_jwt_oidc import JwtManager
 
-jwtManager = JwtManager()
-
 from synonyms import models
 from synonyms.endpoints import api
 from synonyms.models import db, ma
 
 run_version = get_run_version()
+jwtManager = JwtManager()
 
 
 def create_application(run_mode=os.getenv('FLASK_ENV', 'production')):

@@ -4,6 +4,7 @@
 # Testing
 pytest
 pytest-mock
+requests
 
 # Lint and code style
 flake8
@@ -13,3 +14,6 @@ flake8-docstrings
 flake8-isort
 flake8-quotes
 pep8-naming
+
+# TODO: This isn't working so we just added the model to this project so we can run our tests
+# git+https://github.com/bcgov/namex.git#egg=namex&subdirectory=api
