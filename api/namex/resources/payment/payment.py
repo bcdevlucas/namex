@@ -195,7 +195,6 @@ class CreateNameRequestPayment(AbstractNameRequestResource):
         :return:
         """
         try:
-            payment_action = NameRequestActions.REFUND.value
             # Find the existing name request
             nr_model = RequestDAO.query.get(nr_id)
 
