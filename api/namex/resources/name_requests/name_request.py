@@ -123,7 +123,7 @@ class NameRequestResource(BaseNameRequestResource):
     'nr_id': 'NR ID - This field is required',
     'nr_action': 'NR Action - One of [EDIT, CANCEL, RESEND]'
 })
-class NameRequestFields(NameRequestResource):
+class NameRequestFields(BaseNameRequestResource):
     @api.expect(nr_request)
     @cors.crossdomain(origin='*')
     def patch(self, nr_id, nr_action):
@@ -310,7 +310,7 @@ class NameRequestFields(NameRequestResource):
 @api.doc(params={
     'nr_id': 'NR Number - This field is required',
 })
-class NameRequestRollback(NameRequestResource):
+class NameRequestRollback(BaseNameRequestResource):
     @api.expect(nr_request)
     @cors.crossdomain(origin='*')
     def patch(self, nr_id, action):
