@@ -12,7 +12,8 @@ MSG_CLIENT_CREDENTIALS_REQ_FAILED = 'Client credentials request failed'
 
 
 class ApiClientException(Exception):
-    def __init__(self, wrapped_err=None, message="Exception", status_code=500):
+    def __init__(self, wrapped_err=None, body=None, message="Exception", status_code=500):
+        self.body = body
         self.err = wrapped_err
         if wrapped_err:
             self.message = '{msg}\r\n\r\n{desc}'.format(msg=message, desc=str(wrapped_err))
@@ -217,6 +218,15 @@ class SBCPaymentClient(BaseClient):
         return self.call_api(HttpVerbs.GET, request_url)
 
     def get_invoices(self, invoice_id):
+        """
+        TODO: This is deprecated can we avoid using it?
+        :return:
+        """
+        request_url = 'payment-requests/{invoice_id}/invoices'
+        request_url = request_url.format(invoice_id=invoice_id)
+        return self.call_api(HttpVerbs.GET, request_url)
+
+    def get_invoice(self, invoice_id):
         """
         TODO: This is deprecated can we avoid using it?
         :return:
