@@ -11,8 +11,6 @@ from namex.services.payment.payments import get_payment
 
 from .api_namespace import api as payment_api
 
-from openapi_client.models import PaymentRequest
-
 setup_logging()  # It's important to do this first
 
 MSG_BAD_REQUEST_NO_JSON_BODY = 'No JSON data provided'
@@ -23,87 +21,6 @@ MSG_ERROR_CREATING_RESOURCE = 'Could not create / update resource'
 
 def validate_request(request):
     return True
-
-
-# Define our DTO models
-# Generic model types
-dictionary_list_model = payment_api.model('DictionaryList', {
-    'key': fields.String,
-    'list': fields.List(fields.String)
-})
-
-dict_list_model = payment_api.model('DictionaryListList', {
-    'data': fields.List(fields.Nested(dictionary_list_model))
-})
-
-list_model = payment_api.model('List', {
-    'data': fields.List(fields.String)
-})
-
-string_model = payment_api.model('String', {
-    'data': fields.String
-})
-
-# Custom model types
-payment_info_schema = payment_api.model('PaymentInfo', {
-    'methodOfPayment': fields.String
-})
-
-filing_type_schema = payment_api.model('FilingType', {
-    'filingTypeCode': fields.String,
-    'priority': fields.Boolean,
-    'filingDescription': fields.String
-})
-
-filing_info_schema = payment_api.model('FilingInfo', {
-    'corpType': fields.String,
-    'date': fields.String,
-    'filingTypes': fields.List(fields.Nested(filing_type_schema)),
-})
-
-contact_info_schema = payment_api.model('ContactInfo', {
-    # 'firstName': fields.String,
-    # 'lastName': fields.String,
-    'addressLine1': fields.String,
-    'city': fields.String,
-    'province': fields.String,
-    'country': fields.String,
-    'postalCode': fields.String,
-})
-
-business_info_schema = payment_api.model('BusinessInfo', {
-    'businessIdentifier': fields.String,
-    'businessName': fields.String,
-    'contactInfo': fields.Nested(contact_info_schema)
-})
-
-
-payment_invoice_schema = payment_api.model('PaymentInvoice', {
-    'id': fields.String,
-    'referenceNumber': fields.String,
-    'statusCode': fields.String,
-    'createdBy': fields.String,
-    'createdOn': fields.String
-})
-
-payment_response_schema = payment_api.model('Payment', {
-    'id': fields.String,
-    'invoices': fields.List(fields.Nested(payment_invoice_schema)),
-    'paymentMethod': fields.String,
-    'statusCode': fields.String,
-    'createdBy': fields.String,
-    'createdOn': fields.String,
-    'updatedBy': fields.String,
-    'updatedOn': fields.String
-})
-
-# Define our request objects
-# These are POSTED use camelCase
-payment_request_schema = payment_api.model('PaymentRequest', {
-    'paymentInfo': fields.Nested(payment_info_schema),
-    'businessInfo': fields.Nested(business_info_schema),
-    'filingInfo': fields.Nested(filing_info_schema)
-})
 
 
 @payment_api.errorhandler(AuthError)

@@ -275,39 +275,44 @@ def test_payment_fees(client):
     print('Upgrade fees: \n' + json.dumps(upgrade_fees))
 
 
+def test_create_payment(client):
+    create_payment_request = {
+        'paymentInfo': {
+            'methodOfPayment': 'CC'
+        },
+        'businessInfo': {
+            'corpType': 'NRO',
+            'businessIdentifier': 'NR L000001',
+            'businessName': 'ABC PLUMBING LTD.',
+            'contactInfo': {
+                'addressLine1': '1796 KINGS RD',
+                'city': 'VICTORIA',
+                'province': 'BC',
+                'country': 'CA',
+                'postalCode': 'V8R 2P1'
+            }
+        },
+        'filingInfo': {
+            'date': '2020-09-02',
+            'filingTypes': [
+                {
+                    'filingTypeCode': 'NM620',
+                    'priority': False,
+                    'filingDescription': ''
+                }
+            ]
+        }
+    }
+
+    payment = execute_create_payment(client, create_payment_request)
+    return payment
+
+
 def test_payment_flow(client):
     try:
         test_payment_fees(client)
+        payment = test_create_payment(client)
 
-        create_payment_request = {
-            'paymentInfo': {
-                'methodOfPayment': 'CC'
-            },
-            'businessInfo': {
-                'corpType': 'NRO',
-                'businessIdentifier': 'NR L000001',
-                'businessName': 'ABC PLUMBING LTD.',
-                'contactInfo': {
-                    'addressLine1': '1796 KINGS RD',
-                    'city': 'VICTORIA',
-                    'province': 'BC',
-                    'country': 'CA',
-                    'postalCode': 'V8R 2P1'
-                }
-            },
-            'filingInfo': {
-                'date': '2020-09-02',
-                'filingTypes': [
-                    {
-                        'filingTypeCode': 'NM620',
-                        'priority': False,
-                        'filingDescription': ''
-                    }
-                ]
-            }
-        }
-
-        payment = execute_create_payment(client, create_payment_request)
         # TODO: There's really no way to complete this payment that I know of... without using a browser...
         completed_nr = execute_complete_payment(client, payment, 'COMPLETE')
         completed_payment = execute_get_payment(client, payment['nrId'], payment['id'])
