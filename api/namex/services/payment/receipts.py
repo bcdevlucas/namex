@@ -1,11 +1,7 @@
 from pprint import pprint
-import json
 
-from namex.utils.auth import get_client_credentials, MSG_CLIENT_CREDENTIALS_REQ_FAILED
-
-from . import PAYMENT_SVC_URL, PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET
 from .client import SBCPaymentClient, ApiClientException
-from .utils import set_api_client_auth_header, set_api_client_request_host
+from .utils import handle_api_exception
 from .exceptions import SBCPaymentException
 from .request_objects.abstract import Serializable
 
@@ -26,35 +22,15 @@ def generate_receipt(payment_identifier, model):
         return api_response
 
     except ApiClientException as err:
-        print("Exception when calling ReceiptsApi->generate_receipt: %s\n" % err)
-        err_response = json.loads(err.body)
-        title = err_response.get('detail')
-        details = ', '.join(err_response.get('invalidParams', []))
-        message = ''
-        if title and not details:
-            message = '{title}'.format(title=title)
-        elif title and details:
-            message = '{title} - {details}'.format(title=title, details=details)
-        raise SBCPaymentException(err, message=message)
-
+        handle_api_exception(err, func_call_name='PaymentsApi->generate_receipt')
     except Exception as err:
-        print("Exception when calling ReceiptsApi->generate_receipt: %s\n" % err)
         raise SBCPaymentException(err)
 
 
 def get_receipt(payment_identifier, model):
-    # Create an instance of the API class
-    api_instance = SBCPaymentClient()
-
-    authenticated, token = get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
-    if not authenticated:
-        raise SBCPaymentException(message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
-    set_api_client_auth_header(api_instance, token)
-
-    # Set API host URI
-    set_api_client_request_host(api_instance, PAYMENT_SVC_URL)
-
     try:
+        # Create an instance of the API class
+        api_instance = SBCPaymentClient()
         # Get receipt for the payment
         api_response = api_instance.get_receipt(payment_identifier, model)
 
@@ -62,16 +38,6 @@ def get_receipt(payment_identifier, model):
         return api_response
 
     except ApiClientException as err:
-        print("Exception when calling ReceiptsApi->get_receipt: %s\n" % err)
-        err_response = json.loads(err.body)
-        title = err_response.get('detail')
-        details = ', '.join(err_response.get('invalidParams', []))
-        message = ''
-        if title and not details:
-            message = '{title}'.format(title=title)
-        elif title and details:
-            message = '{title} - {details}'.format(title=title, details=details)
-        raise SBCPaymentException(err, message=message)
-
+        handle_api_exception(err, func_call_name='PaymentsApi->get_receipt')
     except Exception as err:
         raise SBCPaymentException(err)

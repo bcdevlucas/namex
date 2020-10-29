@@ -3,6 +3,7 @@ import json
 
 from .client import SBCPaymentClient, ApiClientException
 from .exceptions import SBCPaymentException
+from .utils import handle_api_exception
 from .request_objects.abstract import Serializable
 
 
@@ -105,15 +106,7 @@ def get_payment(payment_identifier):
         return api_response
 
     except ApiClientException as err:
-        print("Exception when calling PaymentsApi->get_payment: %s\n" % err)
-        err_response = json.loads(err.body)
-        message = ''
-        if err_response.get('detail'):
-            message = err_response.get('detail')
-        elif err_response.get('message'):
-            message = err_response.get('message')
-        raise SBCPaymentException(err, message=message)
-
+        handle_api_exception(err, func_call_name='PaymentsApi->get_payment')
     except Exception as err:
         raise SBCPaymentException(err)
 
@@ -129,14 +122,6 @@ def create_payment(model):
         return api_response
 
     except ApiClientException as err:
-        print("Exception when calling PaymentsApi->create_payment: %s\n" % err)
-        err_response = json.loads(err.body)
-        message = ''
-        if err_response.get('detail'):
-            message = err_response.get('detail')
-        elif err_response.get('message'):
-            message = err_response.get('message')
-        raise SBCPaymentException(err, message=message)
-
+        handle_api_exception(err, func_call_name='PaymentsApi->create_payment')
     except Exception as err:
         raise SBCPaymentException(err)
