@@ -1,5 +1,4 @@
 from pprint import pprint
-import json
 
 from .client import SBCPaymentClient, ApiClientException
 from .exceptions import SBCPaymentException

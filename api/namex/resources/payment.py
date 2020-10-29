@@ -15,7 +15,7 @@ from namex.models import Request as RequestDAO, Payment as PaymentDAO
 from namex.services.payment.exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
 from namex.services.payment.fees import calculate_fees, CalculateFeesRequest
 from namex.services.payment.invoices import get_invoices, get_invoice
-from namex.services.payment.payments import get_payment, create_payment, update_payment, CreatePaymentRequest, UpdatePaymentRequest
+from namex.services.payment.payments import get_payment, create_payment
 from namex.services.payment.receipts import get_receipt
 
 """
@@ -234,49 +234,6 @@ class Payment(Resource):
 
         except Exception as err:
             return jsonify(message=MSG_SERVER_ERROR + ' ' + str(err)), 500
-
-    @staticmethod
-    @cors.crossdomain(origin='*')
-    # @jwt.requires_auth
-    @payment_api.expect(payment_request_schema)
-    @payment_api.response(200, 'Success', '')
-    # @marshal_with()
-    def put(payment_identifier):
-        try:
-            payment_identifier = clean_url_path_param(payment_identifier)
-
-            json_input = request.get_json()
-            if not json_input:
-                return jsonify(message=MSG_BAD_REQUEST_NO_JSON_BODY), 400
-
-            # Grab the info we need off the request
-            payment_info = json_input.get('paymentInfo')
-            filing_info = json_input.get('filingInfo')
-            business_info = json_input.get('businessInfo')
-
-            # Update our payment request
-            req = PaymentRequest(
-                payment_info=payment_info,
-                filing_info=filing_info,
-                business_info=business_info
-            )
-
-            payment_response = update_payment(payment_identifier, req)
-            if not payment_response:
-                raise PaymentServiceError(message=MSG_ERROR_CREATING_RESOURCE)
-
-            data = jsonify(payment_response.to_dict())
-            response = make_response(data, 200)
-            return response
-
-        except PaymentServiceError as err:
-            return handle_exception(err, err.message, 500)
-        except SBCPaymentException as err:
-            return handle_exception(err, err.message, 500)
-        except SBCPaymentError as err:
-            return handle_exception(err, err.message, 500)
-        except Exception as err:
-            return handle_exception(err, err, 500)
 
 
 @cors_preflight('POST')
