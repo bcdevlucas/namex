@@ -1,16 +1,8 @@
-from __future__ import print_function
 from pprint import pprint
-
 import json
-from openapi_client import ApiException
 
-from namex.utils.auth import get_client_credentials, MSG_CLIENT_CREDENTIALS_REQ_FAILED
-
-from . import PAYMENT_SVC_URL, PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET
-from .client import SBCPaymentClient
-from .utils import set_api_client_auth_header, set_api_client_request_host
+from .client import SBCPaymentClient, ApiClientException
 from .exceptions import SBCPaymentException
-
 from .request_objects.abstract import Serializable
 
 
@@ -103,25 +95,16 @@ class UpdatePaymentRequest(Payment):
 
 
 def get_payment(payment_identifier):
-    # Create an instance of the API class
-    api_instance = SBCPaymentClient()
-
-    authenticated, token = get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
-    if not authenticated:
-        raise SBCPaymentException(message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
-    set_api_client_auth_header(api_instance, token)
-
-    # Set API host URI
-    set_api_client_request_host(api_instance, PAYMENT_SVC_URL)
-
     try:
+        # Create an instance of the API class
+        api_instance = SBCPaymentClient()
         # Get Payment
         api_response = api_instance.get_payment(payment_identifier)
 
         pprint(api_response)
         return api_response
 
-    except ApiException as err:
+    except ApiClientException as err:
         print("Exception when calling PaymentsApi->get_payment: %s\n" % err)
         err_response = json.loads(err.body)
         message = ''
@@ -132,30 +115,20 @@ def get_payment(payment_identifier):
         raise SBCPaymentException(err, message=message)
 
     except Exception as err:
-        print("Exception when calling PaymentsApi->get_payment: %s\n" % err)
         raise SBCPaymentException(err)
 
 
 def create_payment(model):
-    # Create an instance of the API class
-    api_instance = SBCPaymentClient()
-
-    authenticated, token = get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
-    if not authenticated:
-        raise SBCPaymentException(message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
-    set_api_client_auth_header(api_instance, token)
-
-    # Set API host URI
-    set_api_client_request_host(api_instance, PAYMENT_SVC_URL)
-
     try:
+        # Create an instance of the API class
+        api_instance = SBCPaymentClient()
         # Create payment records
         api_response = api_instance.create_payment(model)
 
         pprint(api_response)
         return api_response
 
-    except ApiException as err:
+    except ApiClientException as err:
         print("Exception when calling PaymentsApi->create_payment: %s\n" % err)
         err_response = json.loads(err.body)
         message = ''
@@ -166,39 +139,4 @@ def create_payment(model):
         raise SBCPaymentException(err, message=message)
 
     except Exception as err:
-        print("Exception when calling PaymentsApi->create_payment: %s\n" % err)
-        raise SBCPaymentException(err)
-
-
-def update_payment(payment_identifier, model):
-    # Create an instance of the API class
-    api_instance = SBCPaymentClient()
-
-    authenticated, token = get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
-    if not authenticated:
-        raise SBCPaymentException(message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
-    set_api_client_auth_header(api_instance, token)
-
-    # Set API host URI
-    set_api_client_request_host(api_instance, PAYMENT_SVC_URL)
-
-    try:
-        # Update payment records
-        api_response = api_instance.update_payment(payment_identifier, model)
-
-        pprint(api_response)
-        return api_response
-
-    except ApiException as err:
-        print("Exception when calling PaymentsApi->update_payment: %s\n" % err)
-        err_response = json.loads(err.body)
-        message = ''
-        if err_response.get('detail'):
-            message = err_response.get('detail')
-        elif err_response.get('message'):
-            message = err_response.get('message')
-        raise SBCPaymentException(err, message=message)
-
-    except Exception as err:
-        print("Exception when calling PaymentsApi->update_payment: %s\n" % err)
         raise SBCPaymentException(err)

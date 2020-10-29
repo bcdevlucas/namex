@@ -117,6 +117,30 @@ class BaseClient:
     def __init__(self, **kwargs):
         self.configuration = kwargs.get('configuration', ClientConfig())
 
+    @staticmethod
+    def get_client_credentials(auth_url, client_id, secret):
+        auth = requests.post(
+            auth_url,
+            auth=(client_id, secret),
+            headers={
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data={
+                'grant_type': 'client_credentials',
+                'client_id': client_id,
+                'client_secret': secret
+            }
+        )
+
+        # Return the auth response if an error occurs
+        if auth.status_code != 200:
+            # TODO: This is mocked out
+            # return True, 'asdf-asdf-asdf-adsf'
+            return False, auth.json()
+
+        token = dict(auth.json())['access_token']
+        return True, token
+
     def set_api_client_auth_header(self, token):
         self.set_api_client_request_header('Authorization', 'Bearer ' + token)
 
@@ -134,11 +158,18 @@ class BaseClient:
 
         return self.configuration.host + self.configuration.prefix + path
 
-    @staticmethod
-    def call_api(method, url, params=None, data=None):
+    def call_api(self, method, url, params=None, data=None):
         try:
             if method not in HttpVerbs:
                 raise ApiClientError()
+
+            authenticated, token = get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
+            if not authenticated:
+                raise ApiClientException(message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
+            self.set_api_client_auth_header(token)
+
+            # Set API host URI
+            self.set_api_client_request_host(PAYMENT_SVC_URL)
 
             headers = {
                 # If using key based auth we could do something like...
