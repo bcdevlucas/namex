@@ -261,12 +261,16 @@ def execute_get_receipt(client, payment_id):
     assert isinstance(payload.get('tax'), list) is True
 
 
-def test_payment_flow(client, jwt, app):
+def test_payment_fees(client):
+    regular_fees = execute_calculate_regular_fees(client)
+    print('Regular fees: \n' + json.dumps(regular_fees))
+    upgrade_fees = execute_calculate_upgrade_fees(client)
+    print('Upgrade fees: \n' + json.dumps(upgrade_fees))
+
+
+def test_payment_flow(client):
     try:
-        regular_fees = execute_calculate_regular_fees(client)
-        print('Regular fees: \n' + json.dumps(regular_fees))
-        upgrade_fees = execute_calculate_upgrade_fees(client)
-        print('Upgrade fees: \n' + json.dumps(upgrade_fees))
+        test_payment_fees(client)
 
         create_payment_request = {
             'paymentInfo': {
@@ -308,4 +312,5 @@ def test_payment_flow(client, jwt, app):
 
         payment_receipt = execute_get_receipt(client, payment['id'])
     except Exception as err:
+        print(repr(err))
         raise err

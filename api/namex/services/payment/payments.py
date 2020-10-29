@@ -81,19 +81,6 @@ class ContactInfo(Serializable):
         self.postalCode = kwargs.get('postalCode', None)
 
 
-class GetPaymentRequest(Serializable):
-    def __init__(self, **kwargs):
-        self.payment_identifier = kwargs.get('payment_identifier')
-
-
-class CreatePaymentRequest(Payment):
-    pass
-
-
-class UpdatePaymentRequest(Payment):
-    pass
-
-
 def get_payment(payment_identifier):
     try:
         # Create an instance of the API class

@@ -4,6 +4,7 @@ from functools import wraps
 import os
 
 PAYMENT_SVC_URL = os.getenv('PAYMENT_SVC_URL')
+PAYMENT_SVC_PREFIX = os.getenv('PAYMENT_SVC_PREFIX', 'api/v1/')
 PAYMENT_SVC_AUTH_URL = os.getenv('PAYMENT_SVC_AUTH_URL')
 PAYMENT_SVC_AUTH_CLIENT_ID = os.getenv('PAYMENT_SVC_AUTH_CLIENT_ID')
 PAYMENT_SVC_CLIENT_SECRET = os.getenv('PAYMENT_SVC_CLIENT_SECRET')
@@ -76,6 +77,11 @@ class HttpVerbs(Enum):
 
 
 class ClientConfig:
+    def __init__(self, config=None):
+        if config:
+            self.host = config.get('host', '')
+            self.prefix = config.get('prefix', '')
+
     """
     The host name
     """
@@ -84,10 +90,6 @@ class ClientConfig:
     Versioning prefix like /api/v1 or whatever
     """
     _prefix = None
-    """
-    Request headers
-    """
-    _headers = None
 
     @property
     def host(self):
@@ -105,18 +107,14 @@ class ClientConfig:
     def prefix(self, val):
         self._prefix = val
 
-    @property
-    def headers(self):
-        return self._headers
-
-    @headers.setter
-    def headers(self, header_arr):
-        self._headers = header_arr
-
 
 class BaseClient:
     def __init__(self, **kwargs):
-        self.configuration = kwargs.get('configuration', ClientConfig())
+        self.configuration = kwargs.get('configuration', ClientConfig({
+            'host': PAYMENT_SVC_URL + '/' if PAYMENT_SVC_URL[-1] is not '/' else PAYMENT_SVC_URL,
+            'prefix': PAYMENT_SVC_PREFIX + '/' if PAYMENT_SVC_PREFIX[-1] is not '/' else PAYMENT_SVC_PREFIX
+        }))
+        self.headers = {}
 
     @staticmethod
     def get_client_credentials(auth_url, client_id, secret):
@@ -150,16 +148,21 @@ class BaseClient:
 
     def set_api_client_request_host(self, url):
         # Set API host URI
-        self.configuration['host'] = url
+        self.configuration.host = url
 
-    def set_default_header(self):
-        pass
+    def set_api_client_request_prefix(self, url):
+        # Set API prefix
+        self.configuration.prefix = url
+
+    def set_default_header(self, key, val):
+        self.headers[key] = val
 
     def build_url(self, path):
+        if self.configuration.prefix:
+            return self.configuration.host + self.configuration.prefix + path
+        return self.configuration.host + '/' + path
 
-        return self.configuration.host + self.configuration.prefix + path
-
-    def call_api(self, method, url, params=None, data=None):
+    def call_api(self, method, url, params=None, data=None, headers=None):
         try:
             if method not in HttpVerbs:
                 raise ApiClientError()
@@ -167,27 +170,27 @@ class BaseClient:
             authenticated, token = get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
             if not authenticated:
                 raise ApiClientException(message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
+
             self.set_api_client_auth_header(token)
 
-            # Set API host URI
-            self.set_api_client_request_host(PAYMENT_SVC_URL)
-
-            headers = {
+            custom_headers = headers if isinstance(headers, dict) else {
                 # If using key based auth we could do something like...
                 # 'x-api-key': 'SampleKey',
             }
+            merged_headers = {**self.headers, **custom_headers}
 
+            url = self.build_url(url)
             response = requests.request(
-                method,
+                method.value,
                 url,
                 params=params,
                 data=data,
-                headers=headers
+                headers=merged_headers
             )
 
             return response
-        except Exception:
-            raise
+        except Exception as err:
+            raise err
 
 
 class SBCPaymentClient(BaseClient):
