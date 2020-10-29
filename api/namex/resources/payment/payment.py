@@ -22,7 +22,7 @@ from namex.resources.name_requests.abstract_nr_resource import AbstractNameReque
 from namex.services.name_request.name_request_state import get_nr_state_actions
 from namex.services.payment.exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
 from namex.services.payment.invoices import get_invoices, get_invoice
-from namex.services.payment.payments import get_payment, create_payment, update_payment
+from namex.services.payment.payments import get_payment, create_payment
 from namex.services.name_request.utils import has_active_payment, get_active_payment
 
 from .api_namespace import api as payment_api
@@ -337,55 +337,6 @@ class NameRequestPayment(AbstractNameRequestResource):
                 'sbcPayment': payment_response.to_dict()
             })
 
-            response = make_response(data, 200)
-            return response
-
-        except PaymentServiceError as err:
-            return handle_exception(err, err.message, 500)
-        except SBCPaymentException as err:
-            return handle_exception(err, err.message, err.status_code)
-        except SBCPaymentError as err:
-            return handle_exception(err, err.message, 500)
-        except Exception as err:
-            return handle_exception(err, err, 500)
-
-    @cors.crossdomain(origin='*')
-    # @jwt.requires_auth
-    @payment_api.expect(payment_request_schema)
-    @payment_api.response(200, 'Success', '')
-    # @marshal_with()
-    def put(self, nr_id, payment_id):
-        try:
-            # Find the existing name request
-            nr_model = RequestDAO.query.get(nr_id)
-
-            if not nr_model:
-                # Should this be a 400 or 404... hmmm
-                return jsonify(message='{nr_id} not found'.format(nr_id=nr_id)), 400
-
-            payment_id = clean_url_path_param(payment_id)
-
-            json_input = request.get_json()
-            if not json_input:
-                return jsonify(message=MSG_BAD_REQUEST_NO_JSON_BODY), 400
-
-            # Grab the info we need off the request
-            payment_info = json_input.get('paymentInfo')
-            filing_info = json_input.get('filingInfo')
-            business_info = json_input.get('businessInfo')
-
-            # Update our payment request
-            req = PaymentRequest(
-                payment_info=payment_info,
-                filing_info=filing_info,
-                business_info=business_info
-            )
-
-            payment_response = update_payment(payment_id, req)
-            if not payment_response:
-                raise PaymentServiceError(message=MSG_ERROR_CREATING_RESOURCE)
-
-            data = jsonify(payment_response.to_dict())
             response = make_response(data, 200)
             return response
 
