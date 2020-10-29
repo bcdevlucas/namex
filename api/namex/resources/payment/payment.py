@@ -21,8 +21,7 @@ from namex.resources.name_requests.abstract_nr_resource import AbstractNameReque
 # from namex.services import EventRecorder
 from namex.services.name_request.name_request_state import get_nr_state_actions
 from namex.services.payment.exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
-# TODO: We may need this, code that uses this import is commented out
-# from namex.services.payment.invoices import get_invoices
+from namex.services.payment.invoices import get_invoices, get_invoice
 from namex.services.payment.payments import get_payment, create_payment, update_payment
 from namex.services.name_request.utils import has_active_payment, get_active_payment
 
@@ -146,8 +145,7 @@ class FindNameRequestPayments(AbstractNameRequestResource):
             # Wrap our payment
             for payment in nr_payments:
                 payment_response = get_payment(payment.payment_token)
-                # TODO: Replace this when we're ready!
-                invoices_response = []  # get_invoices(payment.payment_token)
+                invoices_response = get_invoice(payment.payment_token)
 
                 if not payment_response:
                     return None
@@ -283,11 +281,9 @@ class CreateNameRequestPayment(AbstractNameRequestResource):
                     'sbcPayment': payment_response.to_dict()
                 })
 
-
                 # Record the event
                 nr_svc = self.nr_service
-                #EventRecorder.record(nr_svc.user, Event.POST + ' [payment created]', json_input )
-
+                # EventRecorder.record(nr_svc.user, Event.POST + ' [payment created]', json_input )
 
                 response = make_response(data, 201)
                 return response
@@ -436,9 +432,7 @@ class NameRequestPaymentAction(AbstractNameRequestResource):
                 _self.nr_service.request_data = self.request_data
 
             initialize(self)
-
             nr_svc = self.nr_service
-
             nr_svc.nr_num = nr_model.nrNum
             nr_svc.nr_id = nr_model.id
 

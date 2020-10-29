@@ -2,17 +2,14 @@ from __future__ import print_function
 from pprint import pprint
 
 import json
-import openapi_client
 from openapi_client import ApiException
-# Other stuff you can import...
-# from openapi_client.models import Invoice
-# from openapi_client.rest import ApiException
 
 from namex.utils.auth import get_client_credentials, MSG_CLIENT_CREDENTIALS_REQ_FAILED
 
 from . import PAYMENT_SVC_URL, PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET
+from .client import SBCPaymentClient
 from .utils import set_api_client_auth_header, set_api_client_request_host
-from .exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
+from .exceptions import SBCPaymentException
 
 from .request_objects.abstract import Serializable
 
@@ -30,7 +27,7 @@ class GetInvoicesRequest(Serializable):
 
 def get_invoice(payment_identifier, invoice_id):
     # Create an instance of the API class
-    api_instance = openapi_client.InvoicesApi()
+    api_instance = SBCPaymentClient()
 
     authenticated, token = get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
     if not authenticated:
@@ -64,7 +61,7 @@ def get_invoice(payment_identifier, invoice_id):
 
 def get_invoices(payment_identifier):
     # Create an instance of the API class
-    api_instance = openapi_client.InvoicesApi()
+    api_instance = SBCPaymentClient()
 
     authenticated, token = get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
     if not authenticated:
