@@ -67,7 +67,6 @@ class PaymentFees(Resource):
             priority = json_input.get('priority', None)
 
             # Params are snake_case for this POST
-            # Response data is also snake_case
             req = CalculateFeesRequest(
                 corp_type=corp_type,
                 filing_type_code=filing_type_code,
@@ -80,7 +79,7 @@ class PaymentFees(Resource):
             if not fees:
                 raise SBCPaymentError(message=MSG_ERROR_CREATING_RESOURCE)
 
-            data = jsonify(fees.to_dict())
+            data = jsonify(fees)
             response = make_response(data, 200)
             return response
 

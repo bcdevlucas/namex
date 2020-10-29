@@ -63,7 +63,7 @@ class SBCPaymentInvoices(Resource):
             if not invoices:
                 return jsonify(message=MSG_NOT_FOUND), 404
 
-            data = jsonify(invoices.to_dict())
+            data = jsonify(invoices)
             response = make_response(data, 200)
             return response
 
@@ -101,7 +101,7 @@ class SBCPaymentInvoice(Resource):
             if not invoice:
                 return jsonify(message=MSG_NOT_FOUND), 404
 
-            data = jsonify(invoice.to_dict())
+            data = jsonify(invoice)
             response = make_response(data, 200)
             return response
 
