@@ -133,7 +133,7 @@ class SBCPayment(Resource):
             if not payment:
                 return jsonify(message=MSG_NOT_FOUND), 404
 
-            data = jsonify(payment.to_dict())
+            data = jsonify(payment)
             response = make_response(data, 200)
             return response
 

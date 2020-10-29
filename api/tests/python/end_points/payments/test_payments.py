@@ -44,6 +44,11 @@ draft_input_fields = {
 
 
 @pytest.mark.skip
+def is_int_or_float(val):
+    return isinstance(val, float) or isinstance(val, int)
+
+
+@pytest.mark.skip
 def setup_draft_nr(client):
     # Define our data
     input_fields = draft_input_fields
@@ -55,14 +60,16 @@ def setup_draft_nr(client):
 
 @pytest.mark.skip
 def verify_fees_payload(payload):
-    assert isinstance(payload.get('filing_fees'), float) is True
-    assert isinstance(payload.get('filing_type'), str) is True
-    assert isinstance(payload.get('filing_type_code'), str) is True
-    assert isinstance(payload.get('future_effective_fees'), float) is True
-    assert isinstance(payload.get('priority_fees'), float) is True
-    assert isinstance(payload.get('processing_fees'), float) is True
-    assert isinstance(payload.get('service_fees'), float) is True
-    assert isinstance(payload.get('tax'), list) is True
+    assert isinstance(payload.get('filingFees'), float) is True
+    assert isinstance(payload.get('filingType'), str) is True
+    assert isinstance(payload.get('filingTypeCode'), str) is True
+    assert is_int_or_float(payload.get('futureEffectiveFees')) is True
+    assert is_int_or_float(payload.get('priorityFees')) is True
+    assert is_int_or_float(payload.get('processingFees')) is True
+    assert is_int_or_float(payload.get('serviceFees')) is True
+    assert is_int_or_float(payload.get('futureEffectiveFees')) is True
+    assert isinstance(payload.get('tax'), dict) is True
+    assert is_int_or_float(payload.get('total')) is True
 
 
 @pytest.mark.skip
@@ -105,7 +112,7 @@ def execute_calculate_regular_fees(client):
     payload = json.loads(response.data)
     verify_fees_payload(payload)
 
-    assert payload.get('filing_type_code') == 'NM620'
+    assert payload.get('filingTypeCode') == 'NM620'
 
     return payload
 
@@ -139,7 +146,7 @@ def execute_calculate_upgrade_fees(client):
     payload = json.loads(response.data)
     verify_fees_payload(payload)
 
-    assert payload.get('filing_type_code') == 'NM606'
+    assert payload.get('filingTypeCode') == 'NM606'
 
     return payload
 
@@ -254,10 +261,10 @@ def execute_get_receipt(client, payment_id):
 
     payload = json.loads(response.data)
 
-    assert isinstance(payload.get('filing_fees'), int) is True
-    assert isinstance(payload.get('filing_type'), str) is True
-    assert isinstance(payload.get('filing_type_code'), str) is True
-    assert isinstance(payload.get('processing_fees'), int) is True
+    assert isinstance(payload.get('filingFees'), int) is True
+    assert isinstance(payload.get('filingType'), str) is True
+    assert isinstance(payload.get('filingTypeCode'), str) is True
+    assert isinstance(payload.get('processingFees'), int) is True
     assert isinstance(payload.get('tax'), list) is True
 
 

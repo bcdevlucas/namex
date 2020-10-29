@@ -2,6 +2,7 @@ import requests
 from enum import Enum
 from functools import wraps
 import os
+import json
 
 PAYMENT_SVC_URL = os.getenv('PAYMENT_SVC_URL')
 PAYMENT_SVC_PREFIX = os.getenv('PAYMENT_SVC_PREFIX', 'api/v1/')
@@ -188,7 +189,8 @@ class BaseClient:
                 headers=merged_headers
             )
 
-            return response
+            if response and response.text:
+                return json.loads(response.text)
         except Exception as err:
             raise err
 
