@@ -1,8 +1,10 @@
-import requests
 from enum import Enum
 from functools import wraps
-import os
+import requests
 import json
+import tempfile
+import re
+import os
 
 
 PAYMENT_SVC_URL = os.getenv('PAYMENT_SVC_URL')
@@ -90,6 +92,7 @@ class ClientConfig:
         if config:
             self.host = config.get('host', '')
             self.prefix = config.get('prefix', '')
+            self.temp_path = config.get('temp_path', '')
 
     """
     The host name
@@ -99,6 +102,10 @@ class ClientConfig:
     Versioning prefix like /api/v1 or whatever
     """
     _prefix = None
+    """
+    Temp path for file downloads
+    """
+    _temp_path = None
 
     @property
     def host(self):
@@ -116,12 +123,21 @@ class ClientConfig:
     def prefix(self, val):
         self._prefix = val
 
+    @property
+    def temp_path(self):
+        return self._temp_path
+
+    @temp_path.setter
+    def temp_path(self, val):
+        self._temp_path = val
+
 
 class BaseClient:
     def __init__(self, **kwargs):
         self.configuration = kwargs.get('configuration', ClientConfig({
             'host': PAYMENT_SVC_URL + '/' if PAYMENT_SVC_URL[-1] is not '/' else PAYMENT_SVC_URL,
-            'prefix': PAYMENT_SVC_PREFIX + '/' if PAYMENT_SVC_PREFIX[-1] is not '/' else PAYMENT_SVC_PREFIX
+            'prefix': PAYMENT_SVC_PREFIX + '/' if PAYMENT_SVC_PREFIX[-1] is not '/' else PAYMENT_SVC_PREFIX,
+            'temp_path': None
         }))
         self.headers = {}
 
@@ -163,6 +179,10 @@ class BaseClient:
         # Set API prefix
         self.configuration.prefix = url
 
+    def set_api_client_temp_path(self, url):
+        # Set API prefix
+        self.configuration.temp_path = url
+
     def set_default_header(self, key, val):
         self.headers[key] = val
 
@@ -201,18 +221,32 @@ class BaseClient:
             if not response or not response.ok:
                 raise ApiRequestError(response)
 
-            if response and response.text:
-                if response.headers.get('Content-Type') == 'application/json':
-                    return json.loads(response.text)
-                elif response.headers.get('Content-Type') == 'application/pdf':
-                    return response.content
-
+            if response and response.headers.get('Content-Type') == 'application/json':
+                return json.loads(response.text)
+            elif response and response.headers.get('Content-Type') == 'application/pdf':
+                return self.deserialize_file(response)
         except (ApiRequestError, ApiAuthError, ApiClientError) as err:
             log_api_error_response(err, func_call_name='call_api {method} ({url})'.format(url=url, method=method.value))
             raise err
 
         except Exception as ex:
             raise ex
+
+    def deserialize_file(self, response):
+        """
+        Deserializes body to file
+        Saves response body into a file in a temporary folder.
+        :param response:
+        :return: str File path
+        """
+        fd, path = tempfile.mkstemp(dir=self.configuration.temp_path)
+        os.close(fd)
+        os.remove(path)
+
+        with open(path, 'wb') as f:
+            f.write(response.content)
+
+        return path
 
 
 class SBCPaymentClient(BaseClient):

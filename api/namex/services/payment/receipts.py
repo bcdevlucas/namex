@@ -1,5 +1,3 @@
-from pprint import pprint
-from datetime import datetime
 from .client import SBCPaymentClient
 from .exceptions import SBCPaymentException
 from .models import ReceiptRequest
