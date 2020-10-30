@@ -1,7 +1,7 @@
+import io
 from flask import send_file, make_response, jsonify
 from flask_restplus import Resource, cors
 from flask_jwt_oidc import AuthError
-from datetime import date, datetime
 
 from namex.utils.logging import setup_logging
 from namex.utils.auth import cors_preflight
@@ -53,16 +53,16 @@ class PaymentReceipt(Resource):
                 # Should this be a 400 or 404... hmmm
                 return jsonify(message='{nr_id} not found'.format(nr_id=payment.nrId)), 400
 
+            receipt_info = get_receipt(payment.payment_token)
             receipt_response = generate_receipt(payment.payment_token, payment.payment_completion_date)
 
             if not receipt_response:
-                return jsonify(message=MSG_NOT_FOUND), 404  # TODO: What if we have a record?
+                return jsonify(message=MSG_NOT_FOUND), 404
 
             return send_file(
                 receipt_response,
-                mimetype='application/pdf',
                 as_attachment=True,
-                attachment_filename='payment-receipt-{id}.pdf'.format(id=payment_id))
+                attachment_filename='payment-receipt-{id}.pdf'.format(id=receipt_info.get('receiptNumber')))
 
         except PaymentServiceError as err:
             return handle_exception(err, err.message, 500)
