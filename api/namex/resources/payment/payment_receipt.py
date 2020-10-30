@@ -1,6 +1,7 @@
-from flask import send_file, jsonify
+from flask import send_file, make_response, jsonify
 from flask_restplus import Resource, cors
 from flask_jwt_oidc import AuthError
+from datetime import date, datetime
 
 from namex.utils.logging import setup_logging
 from namex.utils.auth import cors_preflight
@@ -9,7 +10,6 @@ from namex.utils.api_resource import handle_exception
 from namex.models import Request as RequestDAO, Payment as PaymentDAO
 
 from namex.services.payment.exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
-from namex.services.payment.payments import get_payment
 from namex.services.payment.receipts import get_receipt, generate_receipt
 
 from .api_namespace import api as payment_api
@@ -32,8 +32,8 @@ def handle_auth_error(ex):
     return response
 
 
-@cors_preflight('GET')
-@payment_api.route('/<int:payment_id>/receipt', strict_slashes=False, methods=['GET', 'OPTIONS'])
+@cors_preflight('GET, POST')
+@payment_api.route('/<int:payment_id>/receipt', strict_slashes=False, methods=['GET', 'POST', 'OPTIONS'])
 @payment_api.doc(params={
     'payment_id': ''
 })
@@ -43,7 +43,7 @@ class PaymentReceipt(Resource):
     # @jwt.requires_auth
     @payment_api.response(200, 'Success', '')
     # @marshal_with()
-    def post(payment_id):
+    def post(payment_id, ):
         try:
             payment = PaymentDAO.query.get(payment_id)
             # Find the existing name request
@@ -53,20 +53,7 @@ class PaymentReceipt(Resource):
                 # Should this be a 400 or 404... hmmm
                 return jsonify(message='{nr_id} not found'.format(nr_id=payment.nrId)), 400
 
-            payment_response = get_payment(payment.payment_token)
-            # TODO: Make sure we pick the right one... use the first choice
-            corp_name = nr_model.names.all()[0].name
-
-            req = PaymentReceiptInput(
-                corp_name=corp_name,
-                business_number=None,
-                recognition_date_time=None,
-                filing_identifier=None,
-                filing_date_time=payment_response.created_on,
-                file_name=None
-            )
-
-            receipt_response = generate_receipt(payment.payment_token, req)
+            receipt_response = generate_receipt(payment.payment_token, payment.payment_completion_date)
 
             if not receipt_response:
                 return jsonify(message=MSG_NOT_FOUND), 404  # TODO: What if we have a record?
@@ -97,25 +84,13 @@ class PaymentReceipt(Resource):
                 # Should this be a 400 or 404... hmmm
                 return jsonify(message='{nr_id} not found'.format(nr_id=payment.nrId)), 400
 
-            payment_response = get_payment(payment.payment_token)
-            # TODO: Make sure we pick the right one... use the first choice
-            corp_name = nr_model.names.all()[0].name
-
-            req = PaymentReceiptInput(
-                corp_name=corp_name,
-                business_number=None,
-                recognition_date_time=None,
-                filing_identifier=None,
-                filing_date_time=payment_response.created_on,
-                file_name=None
-            )
-
-            receipt_response = get_receipt(payment.payment_token, req)
+            receipt_response = get_receipt(payment.payment_token)
 
             if not receipt_response:
                 return jsonify(message=MSG_NOT_FOUND), 404  # TODO: What if we have a record?
 
-            return send_file(receipt_response, mimetype='application/pdf', as_attachment=True)
+            response = make_response(receipt_response, 200)
+            return response
 
         except PaymentServiceError as err:
             return handle_exception(err, err.message, 500)
