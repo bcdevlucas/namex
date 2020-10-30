@@ -87,6 +87,11 @@ class Receipt(Serializable):
 
 
 @dataclass
+class ReceiptRequest(Serializable):
+    filingDateTime: str = ''
+
+
+@dataclass
 class Payment(Serializable):
     id: int
     serviceFees: float

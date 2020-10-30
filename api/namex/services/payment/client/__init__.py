@@ -239,28 +239,10 @@ class SBCPaymentClient(BaseClient):
         request_url = request_url.format(invoice_id=invoice_id)
         return self.call_api(HttpVerbs.GET, request_url)
 
-    def get_invoices(self, invoice_id):
-        """
-        TODO: This is deprecated can we avoid using it?
-        :return:
-        """
-        request_url = 'payment-requests/{invoice_id}/invoices'
-        request_url = request_url.format(invoice_id=invoice_id)
-        return self.call_api(HttpVerbs.GET, request_url)
-
-    def get_invoice(self, invoice_id):
-        """
-        TODO: This is deprecated can we avoid using it?
-        :return:
-        """
-        request_url = 'payment-requests/{invoice_id}/invoices/{invoice_id}'
-        request_url = request_url.format(invoice_id=invoice_id)
-        return self.call_api(HttpVerbs.GET, request_url)
-
-    def generate_receipt(self, invoice_id):
+    def generate_receipt(self, invoice_id, data):
         request_url = 'payment-requests/{invoice_id}/receipts'
         request_url = request_url.format(invoice_id=invoice_id)
-        return self.call_api(HttpVerbs.POST, request_url)
+        return self.call_api(HttpVerbs.POST, request_url, data=data)
 
     def get_receipt(self, invoice_id):
         request_url = 'payment-requests/{invoice_id}/receipts'

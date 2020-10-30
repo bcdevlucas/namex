@@ -20,7 +20,6 @@ from namex.resources.name_requests.abstract_nr_resource import AbstractNameReque
 # from namex.services import EventRecorder
 from namex.services.name_request.name_request_state import get_nr_state_actions
 from namex.services.payment.exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
-from namex.services.payment.invoices import get_invoices, get_invoice
 from namex.services.payment.payments import get_payment, create_payment
 from namex.services.payment.models import PaymentRequest, Payment
 from namex.services.name_request.utils import has_active_payment, get_active_payment
@@ -244,7 +243,7 @@ class CreateNameRequestPayment(AbstractNameRequestResource):
                 businessInfo=business_info
             )
 
-            payment_response = create_payment(req)
+            payment_response = create_payment(req.as_dict())
             if payment_response.statusCode == PaymentStatusCode.CREATED.value:
                 # Save the payment info to Postgres
                 payment = PaymentDAO()

@@ -18,7 +18,7 @@ def get_payment(payment_identifier):
 
 def create_payment(model):
     try:
-        data = model.__dict__
+        data = model
         api_instance = SBCPaymentClient()
         api_response = api_instance.create_payment(data)
         pprint(api_response)
