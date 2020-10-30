@@ -2,15 +2,8 @@ import jsonpickle
 
 
 class Serializable(dict):
-    def __setitem__(self, key, value):
-        if isinstance(key, str):
-            key = key.casefold()
-        super().__setitem__(key, value)
-
-    def __getitem__(self, key):
-        if isinstance(key, str):
-            key = key.casefold()
-        return super().__getitem__(key)
+    def as_dict(self):
+        return self.__dict__
 
     def to_json_test(self):
         # Allows us to unwrap the response when we're running pytests
