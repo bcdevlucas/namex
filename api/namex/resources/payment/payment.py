@@ -141,14 +141,6 @@ class FindNameRequestPayments(AbstractNameRequestResource):
             # Wrap our payment
             for payment in nr_payments:
                 payment_response = get_payment(payment.payment_token)
-                invoices_response = get_invoice(payment.payment_token)
-
-                if not payment_response:
-                    return None
-                # Don't blow up just because we can't get the invoices
-                if not invoices_response or isinstance(invoices_response, list) is False:
-                    invoices_response = []
-
                 # Wrap the response, providing info from both the SBC Pay response and the payment we created
                 response_data.append({
                     'id': payment.id,
@@ -156,9 +148,9 @@ class FindNameRequestPayments(AbstractNameRequestResource):
                     'token': payment.payment_token,
                     'statusCode': payment.payment_status_code,
                     'completionDate': payment.payment_completion_date,
-                    'invoices': invoices_response,
                     'payment': payment.as_dict(),
-                    'sbcPayment': payment_response.as_dict()
+                    'sbcPayment': payment_response.as_dict(),
+                    'receipts': payment_response.receipts
                 })
 
             return jsonify(response_data), 200
