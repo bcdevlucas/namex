@@ -14,14 +14,11 @@ from namex.services.payment.receipts import get_receipt, generate_receipt
 
 from .api_namespace import api as payment_api
 
-from openapi_client.models import PaymentReceiptInput
-
 setup_logging()  # It's important to do this first
 
 MSG_BAD_REQUEST_NO_JSON_BODY = 'No JSON data provided'
 MSG_SERVER_ERROR = 'Server Error!'
 MSG_NOT_FOUND = 'Resource not found'
-MSG_ERROR_CREATING_RESOURCE = 'Could not create / update resource'
 
 
 def validate_request():
