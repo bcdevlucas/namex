@@ -1,5 +1,5 @@
 from .abstract import Serializable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 
 
@@ -79,19 +79,30 @@ class PaymentRequest(Serializable):
 
 
 @dataclass
+class Receipt(Serializable):
+    id: int
+    receiptAmount: float
+    receiptDate: str = ''
+    receiptNumber: str = ''
+
+
+@dataclass
 class Payment(Serializable):
     id: int
-    paymentMethod: str
-    businessIdentifier: str
-    corpTypeCode: str
-    lineItems: list
     serviceFees: float
     paid: float
     refund: float
     total: float
-    references: list
-    statusCode: str
-    createdBy: str
-    createdName: str
-    createdOn: str
-    _links: list
+    statusCode: str = ''
+    createdBy: str = ''
+    createdName: str = ''
+    createdOn: str = ''
+    updatedName: str = ''
+    updatedOn: str = ''
+    paymentMethod: str = ''
+    businessIdentifier: str = ''
+    corpTypeCode: str = ''
+    lineItems: list = field(default_factory=list)
+    receipts: list = field(default_factory=list)
+    references: list = field(default_factory=list)
+    _links: list = field(default_factory=list)
