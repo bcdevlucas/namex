@@ -3,7 +3,6 @@ from functools import wraps
 import requests
 import json
 import tempfile
-import re
 import os
 
 

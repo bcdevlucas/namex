@@ -1,4 +1,3 @@
-import io
 from flask import send_file, make_response, jsonify
 from flask_restplus import Resource, cors
 from flask_jwt_oidc import AuthError
