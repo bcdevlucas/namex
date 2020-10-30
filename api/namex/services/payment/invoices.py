@@ -1,9 +1,8 @@
 from pprint import pprint
 
-from .client import SBCPaymentClient, ApiClientException
+from .client import SBCPaymentClient
 from .exceptions import SBCPaymentException
-from .utils import handle_api_exception
-from .request_objects.abstract import Serializable
+from .models.abstract import Serializable
 
 
 class GetInvoiceRequest(Serializable):
@@ -27,8 +26,6 @@ def get_invoice(invoice_id):
         pprint(api_response)
         return api_response
 
-    except ApiClientException as err:
-        handle_api_exception(err, func_call_name='PaymentsApi->get_invoice')
     except Exception as err:
         raise SBCPaymentException(err)
 
@@ -43,7 +40,5 @@ def get_invoices(payment_identifier):
         pprint(api_response)
         return api_response
 
-    except ApiClientException as err:
-        handle_api_exception(err, func_call_name='PaymentsApi->get_invoices')
     except Exception as err:
         raise SBCPaymentException(err)

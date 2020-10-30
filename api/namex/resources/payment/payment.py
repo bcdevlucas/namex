@@ -14,7 +14,6 @@ from namex.constants import PaymentState, PaymentStatusCode, RequestAction, Name
 from namex.models import Request as RequestDAO, Payment as PaymentDAO, State, Event
 from namex.services import EventRecorder
 
-
 from namex.resources.name_requests.abstract_nr_resource import AbstractNameRequestResource
 
 # TODO: There are places to add this!
@@ -23,19 +22,17 @@ from namex.services.name_request.name_request_state import get_nr_state_actions
 from namex.services.payment.exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
 from namex.services.payment.invoices import get_invoices, get_invoice
 from namex.services.payment.payments import get_payment, create_payment
+from namex.services.payment.models import PaymentRequest, Payment
 from namex.services.name_request.utils import has_active_payment, get_active_payment
 
 from .api_namespace import api as payment_api
 from .utils import build_payment_request, merge_payment_request
-
-from openapi_client.models import PaymentRequest
 
 setup_logging()  # It's important to do this first
 
 MSG_BAD_REQUEST_NO_JSON_BODY = 'No JSON data provided'
 MSG_SERVER_ERROR = 'Server Error!'
 MSG_NOT_FOUND = 'Resource not found'
-MSG_ERROR_CREATING_RESOURCE = 'Could not create / update resource'
 
 
 def validate_request(request):
@@ -245,28 +242,24 @@ class CreateNameRequestPayment(AbstractNameRequestResource):
                 payment_request = merge_payment_request(nr_model, json.loads(json_input))
 
             # Grab the info we need off the request
-            payment_info = payment_request.get('paymentInfo')
+            payment_info = payment_request.get('paymentInfo', {})
             filing_info = payment_request.get('filingInfo')
             business_info = payment_request.get('businessInfo')
 
             # Create our payment request
             req = PaymentRequest(
-                payment_info=payment_info,
-                filing_info=filing_info,
-                business_info=business_info
+                paymentInfo=payment_info,
+                filingInfo=filing_info,
+                businessInfo=business_info
             )
 
             payment_response = create_payment(req)
-
-            if not payment_response:
-                raise PaymentServiceError(message=MSG_ERROR_CREATING_RESOURCE)
-
-            if payment_response and payment_response.status_code == PaymentStatusCode.CREATED.value:
+            if payment_response.statusCode == PaymentStatusCode.CREATED.value:
                 # Save the payment info to Postgres
                 payment = PaymentDAO()
                 payment.nrId = nr_model.id
                 payment.payment_token = str(payment_response.id)
-                payment.payment_completion_date = payment_response.created_on
+                payment.payment_completion_date = payment_response.createdOn
                 payment.payment_status_code = PaymentState.CREATED.value
                 payment.save_to_db()
 
@@ -278,7 +271,7 @@ class CreateNameRequestPayment(AbstractNameRequestResource):
                     'statusCode': payment.payment_status_code,
                     'completionDate': payment.payment_completion_date,
                     'payment': payment.as_dict(),
-                    'sbcPayment': payment_response.to_dict()
+                    'sbcPayment': payment_response
                 })
 
                 # Record the event

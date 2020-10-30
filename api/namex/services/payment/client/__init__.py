@@ -4,6 +4,7 @@ from functools import wraps
 import os
 import json
 
+
 PAYMENT_SVC_URL = os.getenv('PAYMENT_SVC_URL')
 PAYMENT_SVC_PREFIX = os.getenv('PAYMENT_SVC_PREFIX', 'api/v1/')
 PAYMENT_SVC_AUTH_URL = os.getenv('PAYMENT_SVC_AUTH_URL')
@@ -11,10 +12,11 @@ PAYMENT_SVC_AUTH_CLIENT_ID = os.getenv('PAYMENT_SVC_AUTH_CLIENT_ID')
 PAYMENT_SVC_CLIENT_SECRET = os.getenv('PAYMENT_SVC_CLIENT_SECRET')
 
 MSG_CLIENT_CREDENTIALS_REQ_FAILED = 'Client credentials request failed'
+MSG_INVALID_HTTP_VERB = 'Invalid HTTP verb'
 
 
 class ApiClientException(Exception):
-    def __init__(self, wrapped_err=None, body=None, message="Exception", status_code=500):
+    def __init__(self, wrapped_err=None, body=None, message='Exception', status_code=500):
         self.body = body
         self.err = wrapped_err
         if wrapped_err:
@@ -27,30 +29,32 @@ class ApiClientException(Exception):
 
 
 class ApiClientError(ApiClientException):
-    def __init__(self, wrapped_err=None, message="API exception"):
+    def __init__(self, wrapped_err=None, message='API client error'):
         super().__init__(wrapped_err, message)
 
 
-def get_client_credentials(auth_url, client_id, secret):
-    auth = requests.post(
-        auth_url,
-        auth=(client_id, secret),
-        headers={
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        data={
-            'grant_type': 'client_credentials',
-            'client_id': client_id,
-            'client_secret': secret
-        }
-    )
+class ApiRequestError(Exception):
+    def __init__(self, response=None, message='API request failed'):
+        self.status_code = response.status_code
+        info = json.loads(response.text)
+        self.detail = detail = info.get('detail')
+        self.title = title = info.get('title')
+        self.invalid_params = info.get('invalidParams')
 
-    # Return the auth response if an error occurs
-    if auth.status_code != 200:
-        return False, auth.json()
+        error_msg = None
+        if title and detail and (title != detail):
+            error_msg = '{title}: {detail}'.format(title=self.title, detail=self.detail)
+        if title and not detail or (title and title == detail):
+            error_msg = '{title}'.format(title=title)
+        else:
+            error_msg = message
 
-    token = dict(auth.json())['access_token']
-    return True, token
+        super().__init__(error_msg)
+
+
+class ApiAuthError(Exception):
+    def __init__(self, response=None, message='API authentication error'):
+        super().__init__(response, response.get('error_description', message))
 
 
 def with_authentication(func):
@@ -58,13 +62,17 @@ def with_authentication(func):
     def wrapper(self, *args, **kwargs):
         authenticated, token = self.get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
         if not authenticated:
-            raise ApiClientError(message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
+            raise ApiAuthError(message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
         self.set_api_client_auth_header(token)
         # Set API host URI
         self.set_api_client_request_host(PAYMENT_SVC_URL)
         return func(self, *args, **kwargs)
 
     return wrapper
+
+
+def log_api_error_response(err, func_call_name='function'):
+    print('Error when calling {func}'.format(func=func_call_name))
 
 
 class HttpVerbs(Enum):
@@ -166,13 +174,13 @@ class BaseClient:
     def call_api(self, method, url, params=None, data=None, headers=None):
         try:
             if method not in HttpVerbs:
-                raise ApiClientError()
+                raise ApiClientError(message=MSG_INVALID_HTTP_VERB)
 
-            authenticated, token = get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
+            authenticated, response = self.get_client_credentials(PAYMENT_SVC_AUTH_URL, PAYMENT_SVC_AUTH_CLIENT_ID, PAYMENT_SVC_CLIENT_SECRET)
             if not authenticated:
-                raise ApiClientException(message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
+                raise ApiAuthError(response, message=MSG_CLIENT_CREDENTIALS_REQ_FAILED)
 
-            self.set_api_client_auth_header(token)
+            self.set_api_client_auth_header(response)
 
             custom_headers = headers if isinstance(headers, dict) else {
                 # If using key based auth we could do something like...
@@ -185,14 +193,22 @@ class BaseClient:
                 method.value,
                 url,
                 params=params,
-                data=data,
+                json=data,
                 headers=merged_headers
             )
 
+            if not response or not response.ok:
+                raise ApiRequestError(response)
+
             if response and response.text:
                 return json.loads(response.text)
-        except Exception as err:
+
+        except (ApiRequestError, ApiAuthError, ApiClientError) as err:
+            log_api_error_response(err, func_call_name='call_api {method} ({url})'.format(url=url, method=method.value))
             raise err
+
+        except Exception as ex:
+            raise ex
 
 
 class SBCPaymentClient(BaseClient):

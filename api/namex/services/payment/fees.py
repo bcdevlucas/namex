@@ -1,9 +1,8 @@
 from pprint import pprint
 
-from .client import SBCPaymentClient, ApiClientException
+from .client import SBCPaymentClient
 from .exceptions import SBCPaymentException
-from .utils import handle_api_exception
-from .request_objects.abstract import Serializable
+from .models.abstract import Serializable
 
 
 class CalculateFeesRequest(Serializable):
@@ -31,7 +30,5 @@ def calculate_fees(req):
         pprint(api_response)
         return api_response
 
-    except ApiClientException as err:
-        handle_api_exception(err, 'PaymentsApi->calculate_fees')
     except Exception as err:
         raise SBCPaymentException(err)
