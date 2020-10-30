@@ -193,7 +193,8 @@ class BaseClient:
                 method.value,
                 url,
                 params=params,
-                json=data,
+                # Dump and load to serialize dates
+                json=json.loads(json.dumps(data, default=str)),
                 headers=merged_headers
             )
 

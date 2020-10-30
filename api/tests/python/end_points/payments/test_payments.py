@@ -322,8 +322,6 @@ def test_payment_creation(client):
         # TODO: There's really no way to complete this payment that I know of... without using a browser...
         # assert completed_payment['statusCode'] == 'COMPLETE'
         assert completed_payment['statusCode'] == 'CREATED'
-
-        # payment_receipt = execute_get_receipt(client, payment['id'])
     except Exception as err:
         print(repr(err))
         raise err

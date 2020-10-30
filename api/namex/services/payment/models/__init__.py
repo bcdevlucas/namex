@@ -1,5 +1,6 @@
 from .abstract import Serializable
 from dataclasses import dataclass
+from datetime import date
 
 
 @dataclass
@@ -10,7 +11,7 @@ class PaymentInfo(Serializable):
 @dataclass
 class FilingInfo(Serializable):
     corpType: str
-    date: str
+    date: date
     filingTypes: list
 
 
