@@ -43,7 +43,7 @@ class PaymentReceipt(Resource):
     # @jwt.requires_auth
     @payment_api.response(200, 'Success', '')
     # @marshal_with()
-    def post(payment_id, ):
+    def post(payment_id):
         try:
             payment = PaymentDAO.query.get(payment_id)
             # Find the existing name request
@@ -58,7 +58,11 @@ class PaymentReceipt(Resource):
             if not receipt_response:
                 return jsonify(message=MSG_NOT_FOUND), 404  # TODO: What if we have a record?
 
-            return send_file(receipt_response, mimetype='application/pdf', as_attachment=True)
+            return send_file(
+                receipt_response,
+                mimetype='application/pdf',
+                as_attachment=True,
+                attachment_filename='payment-receipt-{id}.pdf'.format(id=payment_id))
 
         except PaymentServiceError as err:
             return handle_exception(err, err.message, 500)

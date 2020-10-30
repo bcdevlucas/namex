@@ -202,7 +202,10 @@ class BaseClient:
                 raise ApiRequestError(response)
 
             if response and response.text:
-                return json.loads(response.text)
+                if response.headers.get('Content-Type') == 'application/json':
+                    return json.loads(response.text)
+                elif response.headers.get('Content-Type') == 'application/pdf':
+                    return response.content
 
         except (ApiRequestError, ApiAuthError, ApiClientError) as err:
             log_api_error_response(err, func_call_name='call_api {method} ({url})'.format(url=url, method=method.value))
