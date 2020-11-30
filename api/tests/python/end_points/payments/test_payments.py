@@ -277,7 +277,7 @@ def execute_refund_payment(client, payment):
 def execute_cancel_and_refund_all_payments(client, nr_id):
     """
     Cancel NR and request refund for all NR payments.
-    :param client:
+    :param clie
     :param nr_id
     :return:
     """

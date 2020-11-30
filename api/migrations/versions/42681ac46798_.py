@@ -39,7 +39,7 @@ def upgrade():
             {'cd': 'HOLD', 'description': 'A name approval was halted for some reason'},
             {'cd': 'APPROVED', 'description': 'Approved request, this is a final state'},
             {'cd': 'REJECTED', 'description': 'Rejected request, this is a final state'},
-            {'cd': 'CONDITIONAL', 'description': 'Approved, but with conditions to be met. This is a final state'}
+            {'cd': 'CONDITIONAL', 'description': 'Approved, but with conditions to be met'}
         ]
     )
 
