@@ -275,10 +275,10 @@ class SBCPaymentClient(BaseClient):
         request_url = request_url.format(invoice_id=invoice_id)
         return self.call_api(HttpVerbs.GET, request_url)
 
-    def refund_payment(self, invoice_id):
-        request_url = 'payment-requests/refunds'
+    def refund_payment(self, invoice_id, data):
+        request_url = 'payment-requests/{invoice_id}/refunds'
         request_url = request_url.format(invoice_id=invoice_id)
-        return self.call_api(HttpVerbs.POST, request_url)
+        return self.call_api(HttpVerbs.POST, request_url, data=data)
 
     def generate_receipt(self, invoice_id, data):
         request_url = 'payment-requests/{invoice_id}/receipts'

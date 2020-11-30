@@ -347,14 +347,15 @@ class NameRequestFields(BaseNameRequestResource):
 
         # Handle the payments
         valid_states = [
-            PaymentState.COMPLETED,
-            PaymentState.PARTIAL
+            PaymentState.COMPLETED.value,
+            PaymentState.PARTIAL.value
         ]
         # Cancel any payments associated with the NR
         for payment in nr_model.payments.all():
             if payment.payment_status_code in valid_states:
+                # refund_payment(payment.payment_token, {'reason': 'Name Request user requested refund'})
                 refund_payment(payment.payment_token)
-                payment.payment_status_code = PaymentState.REFUND_REQUESTED
+                payment.payment_status_code = PaymentState.REFUND_REQUESTED.value
                 payment.save_to_db()
 
         # This handles the updates for NRO and Solr, if necessary

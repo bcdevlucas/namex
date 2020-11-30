@@ -417,6 +417,13 @@ def test_payment_completion(client):
 
 
 def test_payment_refund(client):
+    """
+    eg.
+    curl -i -X POST -H "Authorization: Bearer <token>" -H "Content-Type: application/json" https://pay-api-dev.pathfinder.gov.bc.ca/api/v1/payment-requests/5979/refunds
+    curl -i -X POST -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJUbWdtZUk0MnVsdUZ0N3FQbmUtcTEzdDUwa0JDbjF3bHF6dHN0UGdUM1dFIn0.eyJleHAiOjE2MDY3OTIzOTUsImlhdCI6MTYwNjc3NDM5NSwianRpIjoiMzU0ZDFhNDctODllYS00OWMwLWE0NmUtNTNjNmY5ZWQ5MzYyIiwiaXNzIjoiaHR0cHM6Ly9kZXYub2lkYy5nb3YuYmMuY2EvYXV0aC9yZWFsbXMvZmNmMGtwcXIiLCJhdWQiOlsiTmFtZVgtRGV2IiwiZW50aXR5LXNlcnZpY2VzIiwic2JjLWF1dGgtd2ViIiwiYWNjb3VudC1zZXJ2aWNlcyIsImFjY291bnQiXSwic3ViIjoiMWMxNjA0ODktNWE1NS00MWUzLTg3NzMtOGQ5ODRhMGZlMDY4IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibmFtZS1yZXF1ZXN0LXNlcnZpY2UtYWNjb3VudCIsInNlc3Npb25fc3RhdGUiOiI0OGE3YjRiNi0zZDI4LTQzMjItODNhZS1hYmI5YWNhZGU5MzciLCJhY3IiOiIxIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbInN5c3RlbSIsImVkaXQiLCJuYW1lc192aWV3ZXIiLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJuYW1leC1zY29wZSIsImNvcnBfdHlwZSI6Ik5SIiwiY2xpZW50SG9zdCI6Ijk2LjU0LjIyNi4yMTQiLCJjbGllbnRJZCI6Im5hbWUtcmVxdWVzdC1zZXJ2aWNlLWFjY291bnQiLCJyb2xlcyI6WyJzeXN0ZW0iLCJlZGl0IiwibmFtZXNfdmlld2VyIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdLCJjbGllbnRBZGRyZXNzIjoiOTYuNTQuMjI2LjIxNCIsInVzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LW5hbWUtcmVxdWVzdC1zZXJ2aWNlLWFjY291bnQifQ.ZoM1BkQPrx0rmio4QCgnJpodR_q-5UdYJKL-jaq70aRSIZHy3DYi28ejhyLMI5SxxxnGHtFKZkFkLObzgKZdJ8m7fqq6xgZ3GMLTVl2nBvSsPIhPGD1vF0vxctWWTq8Q16mjHzBKp23PeiqxQvV0YTX_ln8SoTjy-kl4DrZIDobFeP5pOETTN6riMW0jIWU7mqjyS8NHGLFvo17g71Il1QRbdfMMyIAFjqBQkbknvtQjXefJxX_3UOt-z8BCwRSJafdLzR4HvyAyOZxNOpdrIVjHSnE_RmUIr3yz8YABjUmA_-uZivjyU8y7vkKX_N9ZHcYxFE1BFCVWAuApN_gvuQ" -H "Content-Type: application/json" https://pay-api-dev.pathfinder.gov.bc.ca/api/v1/payment-requests/5979/refunds
+    :param client:
+    :return:
+    """
     try:
         test_payment_fees(client)
         payment = test_create_payment(client)
@@ -438,7 +445,7 @@ def test_payment_refund(client):
 
         assert payment_id == completed_payment['id']
 
-        updated_nr = execute_refund_payment(client, payment_id)
+        updated_nr = execute_refund_payment(client, payment)
 
         assert updated_nr.get('stateCd') == State.REFUND_REQUESTED
         # Make sure there are no actions, this state is identical to CANCELLED except there's a refund request too
