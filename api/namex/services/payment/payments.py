@@ -26,3 +26,14 @@ def create_payment(model):
 
     except Exception as err:
         raise SBCPaymentException(err)
+
+
+def refund_payment(payment_identifier):
+    try:
+        api_instance = SBCPaymentClient()
+        api_response = api_instance.refund_payment(payment_identifier)
+        pprint(api_response)
+        return PaymentInvoice(**api_response)
+
+    except Exception as err:
+        raise SBCPaymentException(err)

@@ -20,7 +20,7 @@ from namex.resources.name_requests.abstract_nr_resource import AbstractNameReque
 
 from namex.services.name_request.name_request_state import get_nr_state_actions
 from namex.services.payment.exceptions import SBCPaymentException, SBCPaymentError, PaymentServiceError
-from namex.services.payment.payments import get_payment, create_payment
+from namex.services.payment.payments import get_payment, create_payment, refund_payment
 from namex.services.payment.models import PaymentRequest
 from namex.services.name_request.utils import has_active_payment, get_active_payment
 
@@ -579,5 +579,16 @@ class NameRequestPaymentAction(AbstractNameRequestResource):
         return nr_model
 
     def complete_refund(self, nr_model: RequestDAO, payment_id: int):
-        # This is just some sample code for what to do to implement refunds when we get to it...
+        # Handle the payments
+        valid_states = [
+            PaymentState.COMPLETED,
+            PaymentState.PARTIAL
+        ]
+        # Cancel any payments associated with the NR
+        for payment in nr_model.payments.all():
+            if payment.payment_status_code in valid_states and payment.payment_id == payment_id:
+                refund_payment(payment.payment_token)
+                payment.payment_status_code = PaymentState.REFUND_REQUESTED
+                payment.save_to_db()
+
         return nr_model

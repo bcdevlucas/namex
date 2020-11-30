@@ -243,6 +243,37 @@ def execute_complete_payment(client, payment, action):
 
 
 @pytest.mark.skip
+def execute_refund_payment(client, payment):
+    """
+    Refund a payment.
+    :param client:
+    :param payment
+    :return:
+    """
+    headers = get_test_headers()
+
+    # PATCH /api/v1/payments/<int:nr_id>/payment/<int:payment_id>/<string:payment_action>
+    request_uri = API_BASE_URI + str(payment.get('nrId')) + '/payment/' + str(payment.get('id')) + '/' + 4
+
+
+
+
+    test_params = [{}]
+
+    query = build_test_query(test_params)
+    path = build_request_uri(request_uri, query)
+    log_request_path(path)
+
+    response = client.patch(path, data={}, headers=headers)
+
+    assert response.status_code == 200
+
+    payload = json.loads(response.data)
+
+    return payload
+
+
+@pytest.mark.skip
 def execute_get_receipt(client, payment_id):
     """
     Get the receipt.
