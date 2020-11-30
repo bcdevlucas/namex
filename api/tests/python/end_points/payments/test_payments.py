@@ -1,8 +1,8 @@
 import pytest
 import json
 
-from namex.constants import NameRequestPatchActions, NameRequestPaymentActions
-from namex.models import Request
+from namex.constants import NameRequestPatchActions, NameRequestPaymentActions, PaymentState
+from namex.models import Request, State, Payment
 
 from .common import API_BASE_URI, API_BASE_NAMEREQUEST_URI
 # Import token and claims if you need it
@@ -190,13 +190,13 @@ def execute_create_payment(client, create_payment_request):
 @pytest.mark.skip
 def execute_get_payment(client, nr_id, payment_id):
     """
-    Get a payment.
+    Get a payment associated with a specific NR.
     :param client:
     :param nr_id
     :param payment_id
     :return:
     """
-    # POST /api/v1/payments/<int:nr_id>/payment/<int:payment_id>
+    # GET /api/v1/payments/<int:nr_id>/payment/<int:payment_id>
     request_uri = API_BASE_URI + str(nr_id) + '/payment/' + str(payment_id)
     test_params = [{}]
 
@@ -213,6 +213,31 @@ def execute_get_payment(client, nr_id, payment_id):
     assert isinstance(payload.get('id'), int) is True
     # TODO: Check invoices / receipts...
     # assert isinstance(payload.get('invoices'), list) is True
+
+    return payload
+
+
+@pytest.mark.skip
+def execute_get_payments(client, nr_id):
+    """
+    Get all payments associated with a specific NR.
+    :param client:
+    :param nr_id
+    :return:
+    """
+    # GET /api/v1/payments/<int:nr_id>
+    request_uri = API_BASE_URI + str(nr_id)
+    test_params = [{}]
+
+    query = build_test_query(test_params)
+    path = build_request_uri(request_uri, query)
+    log_request_path(path)
+
+    response = client.get(path)
+
+    assert response.status_code == 200
+
+    payload = json.loads(response.data)
 
     return payload
 
@@ -277,7 +302,7 @@ def execute_refund_payment(client, payment):
 def execute_cancel_and_refund_all_payments(client, nr_id):
     """
     Cancel NR and request refund for all NR payments.
-    :param clie
+    :param client
     :param nr_id
     :return:
     """
@@ -367,20 +392,25 @@ def test_create_payment(client):
     return payment
 
 
-def test_payment_creation(client):
+def test_payment_completion(client):
     try:
         test_payment_fees(client)
         payment = test_create_payment(client)
+        payment_id = payment['id']
+        nr_id = payment['nrId']
 
-        # TODO: There's really no way to complete this payment that I know of... without using a browser...
-        # completed_nr = execute_complete_payment(client, payment, 'COMPLETE')
-        execute_complete_payment(client, payment, 'COMPLETE')
-        completed_payment = execute_get_payment(client, payment['nrId'], payment['id'])
+        # Fire off the request to complete the payment, just to test that the endpoint is there and runs,
+        # we will not actually be able to complete the payment without a browser (at this time anyway)
+        execute_complete_payment(client, payment, NameRequestPaymentActions.COMPLETE.value)
+        # Manually update the Payment, setting the stateCd to COMPLETE
+        payment_model = Payment.query.get(payment_id)
+        payment_model.payment_status_code = PaymentState.COMPLETED.value
+        payment_model.save_to_db()
+        # Get the 'completed' payment
+        completed_payment = execute_get_payment(client, nr_id, payment_id)
 
-        assert payment['id'] == completed_payment['id']
-        # TODO: There's really no way to complete this payment that I know of... without using a browser...
-        # assert completed_payment['statusCode'] == 'COMPLETE'
-        assert completed_payment['statusCode'] == 'CREATED'
+        assert payment_id == completed_payment['id']
+        assert completed_payment['statusCode'] == PaymentState.COMPLETED.value
     except Exception as err:
         print(repr(err))
         raise err
@@ -390,18 +420,34 @@ def test_payment_refund(client):
     try:
         test_payment_fees(client)
         payment = test_create_payment(client)
+        payment_id = payment['id']
+        nr_id = payment['nrId']
 
-        # TODO: There's really no way to complete this payment that I know of... without using a browser...
-        # completed_nr = execute_complete_payment(client, payment, 'COMPLETE')
-        execute_complete_payment(client, payment, 'COMPLETE')
-        completed_payment = execute_get_payment(client, payment['nrId'], payment['id'])
+        # Get the NR, we created one when we generated the test payment
+        # nr = Request.query.get(payment['nrId'])
 
-        assert payment['id'] == completed_payment['id']
-        # TODO: There's really no way to complete this payment that I know of... without using a browser...
-        # assert completed_payment['statusCode'] == 'COMPLETE'
-        assert completed_payment['statusCode'] == 'CREATED'
+        # Fire off the request to complete the payment, just to test that the endpoint is there and runs,
+        # we will not actually be able to complete the payment without a browser (at this time anyway)
+        execute_complete_payment(client, payment, NameRequestPaymentActions.COMPLETE.value)
+        # Manually update the Payment, setting the stateCd to COMPLETE
+        payment_model = Payment.query.get(payment_id)
+        payment_model.payment_status_code = PaymentState.COMPLETED.value
+        payment_model.save_to_db()
+        # Get the 'completed' payment
+        completed_payment = execute_get_payment(client, nr_id, payment_id)
 
-        execute_refund_payment(client, completed_payment)
+        assert payment_id == completed_payment['id']
+
+        updated_nr = execute_refund_payment(client, payment_id)
+
+        assert updated_nr.get('stateCd') == State.REFUND_REQUESTED
+        # Make sure there are no actions, this state is identical to CANCELLED except there's a refund request too
+        assert updated_nr.get('actions') is None
+
+        # Get any payments and make sure they
+        payments = execute_get_payments(client, completed_payment['nrId'])
+        assert payments and isinstance(payments, list) and len(payments) == 1
+        assert payments[0]['statusCode'] == State.REFUND_REQUESTED
     except Exception as err:
         print(repr(err))
         raise err
@@ -411,21 +457,34 @@ def test_cancel_and_refund(client):
     try:
         test_payment_fees(client)
         payment = test_create_payment(client)
+        payment_id = payment['id']
+        nr_id = payment['nrId']
 
         # Get the NR, we created one when we generated the test payment
-        nr = Request.query.get(payment['nrId'])
+        # nr = Request.query.get(payment['nrId'])
 
-        # TODO: There's really no way to complete this payment that I know of... without using a browser...
-        # completed_nr = execute_complete_payment(client, payment, 'COMPLETE')
-        execute_complete_payment(client, payment, 'COMPLETE')
-        completed_payment = execute_get_payment(client, payment['nrId'], payment['id'])
+        # Fire off the request to complete the payment, just to test that the endpoint is there and runs,
+        # we will not actually be able to complete the payment without a browser (at this time anyway)
+        execute_complete_payment(client, payment, NameRequestPaymentActions.COMPLETE.value)
+        # Manually update the Payment, setting the stateCd to COMPLETE
+        payment_model = Payment.query.get(payment_id)
+        payment_model.payment_status_code = PaymentState.COMPLETED.value
+        payment_model.save_to_db()
+        # Get the 'completed' payment
+        completed_payment = execute_get_payment(client, nr_id, payment_id)
 
-        assert payment['id'] == completed_payment['id']
-        # TODO: There's really no way to complete this payment that I know of... without using a browser...
-        # assert completed_payment['statusCode'] == 'COMPLETE'
-        assert completed_payment['statusCode'] == 'CREATED'
+        assert payment_id == completed_payment['id']
 
-        execute_cancel_and_refund_all_payments(client, completed_payment['nrId'])
+        updated_nr = execute_cancel_and_refund_all_payments(client, completed_payment['nrId'])
+
+        assert updated_nr.get('stateCd') == State.REFUND_REQUESTED
+        # Make sure there are no actions, this state is identical to CANCELLED except there's a refund request too
+        assert updated_nr.get('actions') is None
+
+        # Get any payments and make sure they
+        payments = execute_get_payments(client, completed_payment['nrId'])
+        assert payments and isinstance(payments, list) and len(payments) == 1
+        assert payments[0]['statusCode'] == State.REFUND_REQUESTED
     except Exception as err:
         print(repr(err))
         raise err
@@ -434,7 +493,7 @@ def test_cancel_and_refund(client):
 @pytest.mark.skip
 def test_payment_receipt(client):
     try:
-        test_payment_creation(client)
+        test_payment_completion(client)
         # TODO: Not sure how to test this... still working on it...
         # payment_receipt = execute_get_receipt(client, payment['id'])
     except Exception as err:
