@@ -442,7 +442,7 @@ class NameRequestPaymentAction(AbstractNameRequestResource):
             NameRequestActions.COMPLETE.value: self.complete_reservation_payment,
             NameRequestActions.UPGRADE.value: self.complete_upgrade_payment,
             NameRequestActions.REAPPLY.value: self.complete_reapply_payment,
-            NameRequestActions.REFUND.value: self.complete_refund
+            NameRequestActions.REQUEST_REFUND.value: self.request_refund
         }.get(action)(model, payment_id)
 
     def complete_reservation_payment(self, nr_model: RequestDAO, payment_id: int):
@@ -578,7 +578,15 @@ class NameRequestPaymentAction(AbstractNameRequestResource):
 
         return nr_model
 
-    def complete_refund(self, nr_model: RequestDAO, payment_id: int):
+    def request_refund(self, nr_model: RequestDAO, payment_id: int):
+        """
+        Processes a SINGLE refund request.
+        This is different from the 'refund' in the NameRequest resource PATCH namerequests/{nrId}/REQUEST_REFUND
+        which cancels the NR and refunds any associated payments.
+        :param nr_model:
+        :param payment_id:
+        :return:
+        """
         # Handle the payments
         valid_states = [
             PaymentState.COMPLETED,

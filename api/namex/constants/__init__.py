@@ -391,9 +391,9 @@ class NameRequestActions(AbstractEnum):
     # Payment related actions
     UPGRADE = 'UPGRADE'
     REAPPLY = 'REAPPLY'
-    REFUND = 'REFUND'
     RECEIPT = 'RECEIPT'
     COMPLETE = 'COMPLETE'
+    REQUEST_REFUND = 'REQUEST_REFUND'
 
 
 class NameRequestPatchActions(AbstractEnum):
@@ -406,6 +406,7 @@ class NameRequestPatchActions(AbstractEnum):
     EDIT = NameRequestActions.EDIT.value
     CANCEL = NameRequestActions.CANCEL.value
     RESEND = NameRequestActions.RESEND.value
+    REQUEST_REFUND = NameRequestActions.REQUEST_REFUND.value
 
 
 class NameRequestPaymentActions(AbstractEnum):
@@ -415,16 +416,16 @@ class NameRequestPaymentActions(AbstractEnum):
     """
     UPGRADE = NameRequestActions.UPGRADE.value
     REAPPLY = NameRequestActions.REAPPLY.value
-    REFUND = NameRequestActions.REFUND.value
     RECEIPT = NameRequestActions.RECEIPT.value
     COMPLETE = NameRequestActions.COMPLETE.value
+    REQUEST_REFUND = NameRequestActions.REQUEST_REFUND.value
 
 
 class NameRequestDraftActions(AbstractEnum):
     EDIT = NameRequestActions.EDIT.value
     UPGRADE = NameRequestActions.UPGRADE.value
-    REFUND = NameRequestActions.REFUND.value
     RECEIPT = NameRequestActions.RECEIPT.value
+    REQUEST_REFUND = NameRequestActions.REQUEST_REFUND.value
 
 
 class NameRequestActiveActions(AbstractEnum):
@@ -437,6 +438,7 @@ class NameRequestActiveActions(AbstractEnum):
     REAPPLY = NameRequestActions.REAPPLY.value
     RESEND = NameRequestActions.RESEND.value
     INCORPORATE = NameRequestActions.INCORPORATE.value
+    REQUEST_REFUND = NameRequestActions.REQUEST_REFUND.value
 
 
 class NameRequestReservedActions(AbstractEnum):
@@ -454,8 +456,8 @@ class NameRequestInProgressActions(AbstractEnum):
     """
     EDIT = NameRequestActions.EDIT.value
     UPGRADE = NameRequestActions.UPGRADE.value
-    REFUND = NameRequestActions.REFUND.value
     RECEIPT = NameRequestActions.RECEIPT.value
+    REQUEST_REFUND = NameRequestActions.REQUEST_REFUND.value
 
 
 class NameRequestExpiredActions(AbstractEnum):
@@ -533,7 +535,10 @@ class RequestState(AbstractEnum):
 
 class PaymentStatusCode(AbstractEnum):
     """
-    Payment status code mappings for SBC Pay.
+    Payment status code mappings for SBC Pay this is separate from PaymentState, as the codes that come back from
+    SBC Pay are subject to change so we map the values instead of using the SBC Pay statuses internally.
+    There are also certain differences - on our side we track when a refund is requested, which does not mean a refund
+    has been issued as on the SBC Pay side, for example (there are other cases too).
     """
     CREATED = 'CREATED'
     COMPLETED = 'COMPLETED'

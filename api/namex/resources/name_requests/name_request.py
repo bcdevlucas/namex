@@ -336,7 +336,7 @@ class NameRequestFields(BaseNameRequestResource):
 
     def handle_patch_request_refund(self, nr_model: Request):
         """
-        Can the NR and request refund for all Name Request payments.
+        Can the NR and request a refund for ALL associated Name Request payments.
         :param nr_model:
         :return:
         """

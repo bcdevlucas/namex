@@ -1,7 +1,10 @@
 import pytest
 import json
 
-from .common import API_BASE_URI
+from namex.constants import NameRequestPatchActions, NameRequestPaymentActions
+from namex.models import Request
+
+from .common import API_BASE_URI, API_BASE_NAMEREQUEST_URI
 # Import token and claims if you need it
 # from ..common import token_header, claims
 from ..common.http import build_test_query, build_request_uri
@@ -252,12 +255,9 @@ def execute_refund_payment(client, payment):
     """
     headers = get_test_headers()
 
-    # PATCH /api/v1/payments/<int:nr_id>/payment/<int:payment_id>/<string:payment_action>
-    request_uri = API_BASE_URI + str(payment.get('nrId')) + '/payment/' + str(payment.get('id')) + '/' + 4
-
-
-
-
+    request_uri = API_BASE_URI + \
+        str(payment.get('nrId')) + '/payment/' + str(payment.get('id')) + '/' + \
+        NameRequestPaymentActions.REQUEST_REFUND.value
     test_params = [{}]
 
     query = build_test_query(test_params)
@@ -265,6 +265,32 @@ def execute_refund_payment(client, payment):
     log_request_path(path)
 
     response = client.patch(path, data={}, headers=headers)
+
+    assert response.status_code == 200
+
+    payload = json.loads(response.data)
+
+    return payload
+
+
+@pytest.mark.skip
+def execute_cancel_and_refund_all_payments(client, nr_id):
+    """
+    Cancel NR and request refund for all NR payments.
+    :param client:
+    :param nr_id
+    :return:
+    """
+    headers = get_test_headers()
+
+    request_uri = API_BASE_NAMEREQUEST_URI + str(nr_id) + '/' + NameRequestPatchActions.REQUEST_REFUND.value
+    test_params = [{}]
+
+    query = build_test_query(test_params)
+    path = build_request_uri(request_uri, query)
+    log_request_path(path)
+
+    response = client.patch(path, json={}, headers=headers)
 
     assert response.status_code == 200
 
@@ -355,6 +381,51 @@ def test_payment_creation(client):
         # TODO: There's really no way to complete this payment that I know of... without using a browser...
         # assert completed_payment['statusCode'] == 'COMPLETE'
         assert completed_payment['statusCode'] == 'CREATED'
+    except Exception as err:
+        print(repr(err))
+        raise err
+
+
+def test_payment_refund(client):
+    try:
+        test_payment_fees(client)
+        payment = test_create_payment(client)
+
+        # TODO: There's really no way to complete this payment that I know of... without using a browser...
+        # completed_nr = execute_complete_payment(client, payment, 'COMPLETE')
+        execute_complete_payment(client, payment, 'COMPLETE')
+        completed_payment = execute_get_payment(client, payment['nrId'], payment['id'])
+
+        assert payment['id'] == completed_payment['id']
+        # TODO: There's really no way to complete this payment that I know of... without using a browser...
+        # assert completed_payment['statusCode'] == 'COMPLETE'
+        assert completed_payment['statusCode'] == 'CREATED'
+
+        execute_refund_payment(client, completed_payment)
+    except Exception as err:
+        print(repr(err))
+        raise err
+
+
+def test_cancel_and_refund(client):
+    try:
+        test_payment_fees(client)
+        payment = test_create_payment(client)
+
+        # Get the NR, we created one when we generated the test payment
+        nr = Request.query.get(payment['nrId'])
+
+        # TODO: There's really no way to complete this payment that I know of... without using a browser...
+        # completed_nr = execute_complete_payment(client, payment, 'COMPLETE')
+        execute_complete_payment(client, payment, 'COMPLETE')
+        completed_payment = execute_get_payment(client, payment['nrId'], payment['id'])
+
+        assert payment['id'] == completed_payment['id']
+        # TODO: There's really no way to complete this payment that I know of... without using a browser...
+        # assert completed_payment['statusCode'] == 'COMPLETE'
+        assert completed_payment['statusCode'] == 'CREATED'
+
+        execute_cancel_and_refund_all_payments(client, completed_payment['nrId'])
     except Exception as err:
         print(repr(err))
         raise err

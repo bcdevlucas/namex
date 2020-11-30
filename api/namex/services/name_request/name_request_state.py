@@ -102,7 +102,7 @@ action_handlers = {
     NameRequestActions.EDIT.value: display_edit_action,
     NameRequestActions.UPGRADE.value: display_upgrade_action,
     NameRequestActions.CANCEL.value: display_cancel_action,
-    NameRequestActions.REFUND.value: display_refund_action,
+    NameRequestActions.REQUEST_REFUND.value: display_refund_action,
     NameRequestActions.RECEIPT.value: display_receipt_action,
     NameRequestActions.REAPPLY.value: display_reapply_action,
     NameRequestActions.RESEND.value: display_resend_action,
