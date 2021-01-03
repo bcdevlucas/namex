@@ -100,7 +100,7 @@ async def private_service():
     start_time = time()
     result = await asyncio.gather(
         *[auto_analyze(name, list_name, list_dist, list_desc, dict_substitution, dict_synonyms, np_svc_prep_data) for
-          name in matches]
+          name in matches[0:49]]
     )
     print('--- Conflict analysis for {count} matches in {time} seconds ---'.format(
         count=len(matches),

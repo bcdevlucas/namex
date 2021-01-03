@@ -62,6 +62,7 @@ class Config:  # pylint: disable=too-few-public-methods
         port=int(DB_PORT),
         name=DB_NAME
     )
+    SQLALCHEMY_POOL_SIZE = 100
 
     SOLR_SYNONYMS_API_URL = os.getenv('SOLR_SYNONYMS_API_URL', None)
 
