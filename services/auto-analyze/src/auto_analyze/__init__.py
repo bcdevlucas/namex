@@ -26,9 +26,7 @@ from namex.models import db, ma
 from namex.services.name_request.auto_analyse.protected_name_analysis import ProtectedNameAnalysisService
 from quart import Quart, jsonify, request
 
-
 from .analyzer import auto_analyze
-
 
 # Set config
 QUART_APP = os.getenv('QUART_APP')
