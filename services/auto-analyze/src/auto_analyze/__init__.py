@@ -98,7 +98,7 @@ async def private_service():
     start_time = time()
     result = await asyncio.gather(
         *[auto_analyze(name, list_name, list_dist, list_desc, dict_substitution, dict_synonyms, np_svc_prep_data) for
-          name in matches]
+          name in matches[:50]]
     )
     print('--- Conflict analysis for {count} matches in {time} seconds ---'.format(
         count=len(matches),
@@ -109,6 +109,15 @@ async def private_service():
     ))
 
     return jsonify(result=result)
+
+
+@app.after_request
+def after_request(response):
+    if db is not None:
+        print('Closing AutoAnalyze service DB connections')
+        db.engine.dispose()
+
+    return response
 
 
 if __name__ == '__main__':

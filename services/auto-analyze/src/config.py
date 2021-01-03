@@ -62,8 +62,8 @@ class Config:  # pylint: disable=too-few-public-methods
         port=int(DB_PORT),
         name=DB_NAME
     )
-    SQLALCHEMY_POOL_SIZE = None  # Disable pooling
-    SQLALCHEMY_POOL_RECYCLE = 5  # Auto recycle connections after 5s of inactivity
+    # SQLALCHEMY_POOL_SIZE = 500  # Disable pooling
+    # SQLALCHEMY_POOL_RECYCLE = 5  # Auto recycle connections after 5s of inactivity
     SQLALCHEMY_ENGINE_OPTIONS = {
         'poolclass': NullPool
     }

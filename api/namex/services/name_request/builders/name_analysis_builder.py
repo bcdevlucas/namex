@@ -518,6 +518,10 @@ class NameAnalysisBuilder(AbstractNameAnalysisBuilder, ABC):
                                                   json=json_analyze)
                 if not conflict_response:
                     warnings.warn("Quart Service did not return a result", Warning)
+
+                if conflict_response.ok is False:
+                    raise Exception('AutoAnalyze service error ' + repr(conflict_response))
+
                 conflicts = conflict_response.json()
                 dict_matches_counter = dict(ChainMap(*conflicts.get('result')))
 
