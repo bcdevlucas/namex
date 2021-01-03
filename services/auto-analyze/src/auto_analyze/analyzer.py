@@ -30,8 +30,7 @@ from namex.services.name_request.auto_analyse.name_analysis_utils import (
 from namex.services.name_request.auto_analyse.protected_name_analysis import ProtectedNameAnalysisService
 from namex.services.name_request.builders.name_analysis_builder import NameAnalysisBuilder
 from nltk.stem import PorterStemmer
-from swagger_client import SynonymsApi as SynonymService
-
+from synonyms.services import SynonymService
 
 porter = PorterStemmer()
 

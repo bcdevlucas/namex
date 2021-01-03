@@ -98,9 +98,9 @@ def get_all_dict_substitutions(dist_substitution_dict, desc_substitution_dict, l
 
 def get_distinctive_substitutions(syn_svc, list_dist):
     all_dist_substitutions_synonyms = syn_svc.get_all_substitutions_synonyms(
-        words=list_dist,
-        words_are_distinctive=True
-    ).data
+        list_d=list_dist,
+        distinctive=True
+    )
 
     dist_substitution_dict = parse_dict_of_lists(all_dist_substitutions_synonyms)
 
@@ -109,9 +109,9 @@ def get_distinctive_substitutions(syn_svc, list_dist):
 
 def get_descriptive_substitutions(syn_svc, list_desc):
     all_desc_substitutions_synonyms = syn_svc.get_all_substitutions_synonyms(
-        words=list_desc,
-        words_are_distinctive=False
-    ).data
+        list_d=list_desc,
+        distinctive=False
+    )
 
     desc_substitution_dict = parse_dict_of_lists(all_desc_substitutions_synonyms)
 
@@ -140,7 +140,7 @@ def check_numbers_beginning(syn_svc, tokens):
     if tokens[0].isdigit():
         for idx, token in enumerate(tokens[1:]):
             if not token.isdigit():
-                if not syn_svc.get_word_synonyms(word=token).data:
+                if not syn_svc.get_word_synonyms(word=token):
                     tokens = tokens[idx + 1:]
                 break
     return tokens
@@ -154,7 +154,7 @@ def check_synonyms(syn_svc, stand_alone_words, list_dist_words, list_desc_words,
 
     for word in list_name:
         if word in list_desc_words:
-            substitution = syn_svc.get_word_synonyms(word=word).data
+            substitution = syn_svc.get_word_synonyms(word=word)
             if substitution or word.lower() in stand_alone_words:
                 dict_desc[word] = substitution
                 list_desc.append(word)
@@ -274,7 +274,7 @@ def subsequences(iterable, length):
 def get_valid_compound_descriptive(syn_svc, list_compound):
     desc_dist = dict()
     for compound in list_compound:
-        substitution = syn_svc.get_word_synonyms(word=compound.replace(" ", "")).data
+        substitution = syn_svc.get_word_synonyms(word=compound.replace(" ", ""))
         if substitution:
             desc_dist[compound] = substitution
 

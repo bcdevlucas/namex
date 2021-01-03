@@ -22,7 +22,7 @@ from namex.services.word_classification.token_classifier \
 from namex.services.virtual_word_condition.virtual_word_condition \
     import VirtualWordConditionService
 
-from swagger_client import SynonymsApi as SynonymService
+from synonyms.services import SynonymService
 
 '''
 This is the director for AutoAnalyseService.
