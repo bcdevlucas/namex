@@ -255,8 +255,8 @@ class Request(db.Model):
         # this will error if there's nothing in the queue - likelihood ~ 0
         r = db.session.query(Request). \
             filter(
-            Request.stateCd.in_([State.DRAFT]),
-            Request.nrNum.notlike('NR L%')). \
+                Request.stateCd.in_([State.DRAFT]),
+                Request.nrNum.notlike('NR L%')). \
             order_by(Request.priorityCd.desc(), Request.submittedDate.asc()). \
             with_for_update().first()
         # this row is now locked
@@ -277,9 +277,9 @@ class Request(db.Model):
         """Get the oldest NR in DRAFT state."""
         return db.session.query(Request). \
             filter(
-            Request.stateCd.in_([State.DRAFT]),
-            Request.nrNum.notlike('NR L%')). \
-            order_by(Request.priorityCd.desc(), Request.submittedDate.asc()). \
+                Request.stateCd.in_([State.DRAFT]),
+                Request.nrNum.notlike('NR L%')). \
+            order_by(Request.submittedDate.asc()). \
             first()
 
     @classmethod
@@ -290,9 +290,9 @@ class Request(db.Model):
         """
         existing_nr = db.session.query(Request). \
             filter(
-            Request.userId == userObj.id,
-            Request.stateCd == State.INPROGRESS,
-            Request.nrNum.notlike('NR L%')). \
+                Request.userId == userObj.id,
+                Request.stateCd == State.INPROGRESS,
+                Request.nrNum.notlike('NR L%')). \
             one_or_none()
 
         return existing_nr
@@ -483,8 +483,7 @@ class Request(db.Model):
             elif word in list_desc:
                 name.extend(Request.set_special_characters_descriptive([word]))
             else:
-                raise Exception(
-                    'Invalid classification for the word {0}. Cannot be included in exact match query.'.format(word))
+                raise Exception('Invalid classification for the word {0}. Cannot be included in exact match query.'.format(word))
 
         criteria = cls.get_designations_in_name(criteria, name, any_designation_list, end_designation_list, stop_words)
 
@@ -512,27 +511,6 @@ class Request(db.Model):
 
         return criteria
 
-    """
-    Lucas - Just leaving this in here for reference while merging
-    @classmethod
-    def get_distinctive_query(cls, dist, stop_words, check_name_is_well_formed):
-        special_characters_dist = Request.set_special_characters_distinctive(dist)
-        substitutions = '|'.join(map(str, special_characters_dist))
-        if not check_name_is_well_formed:
-            dist_criteria = r'(no.?)*\s*\d*\s*\W*({0})?\W*({1})\W*\s*\y'.format(stop_words, substitutions)
-        else:
-            dist_criteria = r'\s*\W*({0})?\W*({1})\W*\s*\y'.format(stop_words, substitutions)
-
-        return dist_criteria
-    
-    @classmethod
-    def insert_name_criteria(cls, criteria, name_criteria):
-        for e in criteria:
-            e.filters.insert(len(e.filters), [func.lower(Name.name).op('~')(name_criteria)])
-
-        return criteria
-    """
-
     @classmethod
     def get_name_criteria(cls, dist_list, desc_list, list_name):
         name_criteria = ''
@@ -551,40 +529,6 @@ class Request(db.Model):
             e.filters.insert(len(e.filters), [func.lower(Name.name).op('~')(name_criteria)])
 
         return criteria
-
-    """
-    Lucas - Just leaving this in here for reference while merging
-    @classmethod
-    def get_name_criteria(cls, dist_list, desc_list, list_name):
-        name_criteria = ''
-        if dist_list:
-            substitutions = cls.get_distinctive(dist_list, list_name)
-            name_criteria = cls.format_criteria(name_criteria, substitutions, r'^((\w+\s\w+\s+)|\w+\s+)?\y(', r')+\y.*?')
-        if desc_list:
-            synonyms = cls.get_descriptive(desc_list, list_name)
-            name_criteria = cls.format_criteria(name_criteria, synonyms, r'\y(', ')+')
-
-        return name_criteria
-
-    @classmethod
-    def insert_name_criteria(cls, criteria, name_criteria):
-        for e in criteria:
-            e.filters.insert(len(e.filters), [func.lower(Name.name).op('~')(name_criteria)])
-
-        return criteria
-
-    """
-    Lucas - Just leaving this in here for reference while merging
-    @classmethod
-    def get_descriptive_query(cls, desc, criteria, name_criteria):
-        special_characters_descriptive = Request.set_special_characters_descriptive(desc)
-        for e in criteria:
-            substitutions = ' ?| '.join(map(str, special_characters_descriptive)) + ' ?'
-            name_criteria += r'.*({})\y'.format(substitutions)
-            e.filters.insert(len(e.filters), [func.lower(Name.name).op('~')(name_criteria)])
-
-        return criteria
-    """
 
     @classmethod
     def format_criteria(cls, criteria, substitutions, prefix, suffix):
