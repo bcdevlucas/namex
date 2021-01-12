@@ -555,6 +555,27 @@ class Request(db.Model):
     """
     Lucas - Just leaving this in here for reference while merging
     @classmethod
+    def get_name_criteria(cls, dist_list, desc_list, list_name):
+        name_criteria = ''
+        if dist_list:
+            substitutions = cls.get_distinctive(dist_list, list_name)
+            name_criteria = cls.format_criteria(name_criteria, substitutions, r'^((\w+\s\w+\s+)|\w+\s+)?\y(', r')+\y.*?')
+        if desc_list:
+            synonyms = cls.get_descriptive(desc_list, list_name)
+            name_criteria = cls.format_criteria(name_criteria, synonyms, r'\y(', ')+')
+
+        return name_criteria
+
+    @classmethod
+    def insert_name_criteria(cls, criteria, name_criteria):
+        for e in criteria:
+            e.filters.insert(len(e.filters), [func.lower(Name.name).op('~')(name_criteria)])
+
+        return criteria
+
+    """
+    Lucas - Just leaving this in here for reference while merging
+    @classmethod
     def get_descriptive_query(cls, desc, criteria, name_criteria):
         special_characters_descriptive = Request.set_special_characters_descriptive(desc)
         for e in criteria:
